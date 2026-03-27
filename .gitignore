@@ -1,0 +1,14 @@
+/.idea
+/.vscode
+
+*/bin/*
+*/obj/*
+
+*.log
+*.tmp
+*.exe
+*.dll
+*.user
+*.suo
+
+*.env
