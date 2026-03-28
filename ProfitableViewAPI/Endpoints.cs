@@ -1,5 +1,5 @@
 using System.Net;
-using ProfitableViewData.DTOS;
+using ProfitableViewApp.DTOS;
 
 namespace ProfitableViewCore;
 

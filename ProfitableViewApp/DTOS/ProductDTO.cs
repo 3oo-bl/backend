@@ -1,4 +1,4 @@
-namespace ProfitableViewData.DTOS;
+namespace ProfitableViewApp.DTOS;
 
 public class ProductDTO
 {

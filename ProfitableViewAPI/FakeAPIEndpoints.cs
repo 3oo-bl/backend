@@ -5,7 +5,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using ProfitableViewData.DTOS;
+using ProfitableViewApp.DTOS;
+using ProfitableViewApp.Services;
 
 namespace ProfitableViewCore;
 
@@ -52,10 +53,11 @@ public static class EndpointsExtensions
 
     public static void MapFakeEndpoints(this WebApplication app, ILogger logger)
     {
-        app.MapPatch("/users/{me}",
-            [Authorize] (int me, PrefsWeigthsDTO newPreferences) =>
+        app.MapPatch("/users",
+            [Authorize] (HttpContext context, PrefsWeigthsDTO newPreferences) =>
         {
-            return UpdatePreferencies(_fakeDB[me], newPreferences, logger);
+            var userId = context.User.FindFirst(ClaimTypes.Email).Value;
+            return UpdatePreferencies(userId, newPreferences, logger);
         }).WithOpenApi();
         app.MapPost("/goods/search", [Authorize] ([FromBody] RequestStartDTO requestStartDto) =>
         {
@@ -77,29 +79,18 @@ public static class EndpointsExtensions
             ++i;
             return Results.Ok();
         }).WithOpenApi();
-        app.MapPost("/auth/login", (IConfiguration config, string email, string password) =>
+        app.MapPost("/auth/login", (AuthenticationService authService, string email, string password) =>
         {
             if (!_fakeDB.Any(x => x.Value.Email == email && x.Value.Password == password))
                 return Results.NotFound();
-            var claims = new List<Claim> {new(ClaimTypes.Email, email)};
-            var key = config["jwt:Key"];
-            Console.WriteLine($"KEY: '{key}'");
-
-            var token = new JwtSecurityToken(
-                issuer: "",
-                audience: "ProfitableViewAPI",
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(30),
-                signingCredentials: new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["jwt:Key"]!)),
-                    SecurityAlgorithms.HmacSha256));
             
-            return Results.Ok(new JwtSecurityTokenHandler().WriteToken(token));
+            return Results.Ok(authService.GenerateToken(email));
         }).WithOpenApi();
     }
 
-    private static HttpStatusCode UpdatePreferencies(UserDTO user, PrefsWeigthsDTO newPreferences, ILogger logger)
+    private static HttpStatusCode UpdatePreferencies(string login, PrefsWeigthsDTO newPreferences, ILogger logger)
     {
+        var user = _fakeDB.FirstOrDefault(x => x.Value.Email == login).Value;
         user.Preferences = newPreferences;
         logger.LogInformation("Обновлено.");
         return HttpStatusCode.NoContent;

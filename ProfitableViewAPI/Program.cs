@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ProfitableViewApp.Services;
 using ProfitableViewCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+if (string.IsNullOrEmpty(builder.Configuration["jwt:Key"]))
+    builder.Configuration["jwt:Key"] = File.ReadAllText("/run/secrets/jwt_key");
+
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -60,6 +64,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
+
+builder.Services.AddScoped<AuthenticationService>();
 
 var app = builder.Build();
 
