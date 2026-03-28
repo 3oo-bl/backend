@@ -1,5 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using ProfitableViewData.DTOS;
 
 namespace ProfitableViewCore;
@@ -11,7 +16,7 @@ public static class EndpointsExtensions
         {
             0, new()
             {
-                Name = "Антон", Email = "email@email.com", Password = "aaaaa",
+                Name = "Антон", Email = "1", Password = "1",
                 Preferences = new() { Price = 0.5f, Delivery = 0.1f, SellerRating = 0.4f }
             }
         },
@@ -23,6 +28,8 @@ public static class EndpointsExtensions
             }
         },
     };
+
+    private static int i = 2;
 
     private static List<ProductDTO> _fakeGoods = new()
     {
@@ -46,24 +53,48 @@ public static class EndpointsExtensions
     public static void MapFakeEndpoints(this WebApplication app, ILogger logger)
     {
         app.MapPatch("/users/{me}",
-        (int me, PrefsWeigthsDTO newPreferences) =>
+            [Authorize] (int me, PrefsWeigthsDTO newPreferences) =>
         {
             return UpdatePreferencies(_fakeDB[me], newPreferences, logger);
         }).WithOpenApi();
-        app.MapPost("/goods/search", ([FromBody] RequestDTO requestDto) =>
+        app.MapPost("/goods/search", [Authorize] ([FromBody] RequestStartDTO requestStartDto) =>
         {
-            return StartParsing(requestDto);
+            return StartParsing(requestStartDto);
         }).WithOpenApi();
-        app.MapGet("/goods/search/{jobId}", ([FromQuery] string jobId,
-            [FromQuery] int skip,
-            [FromQuery] int take,
-            [FromQuery] int? minPrice,
-            [FromQuery] int? maxPrice,
-            [FromQuery] string? sortBy,
-            [FromQuery] string? orderBy) =>
+        app.MapGet("/goods/search/{jobId}", [Authorize] (string jobId,
+            [AsParameters] RequestResultsDTO requestResultsDto) =>
         {
-            return GetProducts(jobId, skip, take,
-                minPrice, maxPrice, sortBy, orderBy);
+            var result = GetProducts(jobId, requestResultsDto);
+            if (result is null)
+                return Results.NotFound();
+            return Results.Ok(result);
+        }).WithOpenApi();
+        app.MapPost("/auth/register", (UserDTO newUser) =>
+        {
+            if (_fakeDB.Any(x => x.Value.Email == newUser.Email))
+                return Results.Conflict();
+            _fakeDB[i] = newUser;
+            ++i;
+            return Results.Ok();
+        }).WithOpenApi();
+        app.MapPost("/auth/login", (IConfiguration config, string email, string password) =>
+        {
+            if (!_fakeDB.Any(x => x.Value.Email == email && x.Value.Password == password))
+                return Results.NotFound();
+            var claims = new List<Claim> {new(ClaimTypes.Email, email)};
+            var key = config["jwt:Key"];
+            Console.WriteLine($"KEY: '{key}'");
+
+            var token = new JwtSecurityToken(
+                issuer: "",
+                audience: "ProfitableViewAPI",
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(30),
+                signingCredentials: new SigningCredentials(
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["jwt:Key"]!)),
+                    SecurityAlgorithms.HmacSha256));
+            
+            return Results.Ok(new JwtSecurityTokenHandler().WriteToken(token));
         }).WithOpenApi();
     }
 
@@ -74,17 +105,16 @@ public static class EndpointsExtensions
         return HttpStatusCode.NoContent;
     }
 
-    private static List<ProductDTO> GetProducts(string jobId, int skip, int take,
-        int? minPrice, int? maxPrice, string? sortBy, string? orderBy)
+    private static List<ProductDTO>? GetProducts(string jobId, RequestResultsDTO requestResultsDto)
     {
         if (!_fakeFoundedGoods.ContainsKey(jobId))
             return null;
-        return _fakeFoundedGoods[jobId].Skip(skip).Take(take).ToList();
+        return _fakeFoundedGoods[jobId].Skip(requestResultsDto.Skip).Take(requestResultsDto.Take).ToList();
     }
 
-    private static string StartParsing(RequestDTO requestDto)
+    private static string StartParsing(RequestStartDTO requestStartDto)
     {
-        var found = _fakeGoods.Where(x => x.Name == requestDto.Item).ToList();
+        var found = _fakeGoods.Where(x => x.Name == requestStartDto.Item).ToList();
         _fakeFoundedGoods = new Dictionary<string, List<ProductDTO>> {{ "token", found}};
         return "token";
     }
