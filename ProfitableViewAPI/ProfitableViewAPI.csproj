@@ -1,19 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>ProfitableViewCore</RootNamespace>
-    </PropertyGroup>
+      <UserSecretsId>f2c34c13-87b9-4507-bf09-bb664db20be2</UserSecretsId>
+  </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.21"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.25" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.21" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ProfitableViewCore\ProfitableViewCore.csproj" />
+      <ProjectReference Include="..\ProfitableViewApp\ProfitableViewApp.csproj" />
     </ItemGroup>
 
 </Project>
