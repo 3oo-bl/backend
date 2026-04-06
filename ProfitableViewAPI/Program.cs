@@ -2,8 +2,10 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ProfitableViewApp.Interfaces;
 using ProfitableViewApp.Services;
 using ProfitableViewCore;
+using ProfitableViewData;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +68,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddScoped<HttpClient>();
+builder.Services.BindParsers();
 
 var app = builder.Build();
 

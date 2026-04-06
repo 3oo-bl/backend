@@ -16,6 +16,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ProfitableViewApp\ProfitableViewApp.csproj" />
+      <ProjectReference Include="..\ProfitableViewInfra\ProfitableViewInfra.csproj" />
     </ItemGroup>
 
 </Project>
