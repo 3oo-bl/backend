@@ -1,0 +1,113 @@
+import json
+
+import requests
+import time
+import random
+
+import wb_pb2
+import wb_pb2_grpc
+
+
+class WBParserService(wb_pb2_grpc.WbParserServicer):
+    def __init__(self):
+        self.session = requests.Session()
+
+        self.headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/122.0.0.0 Safari/537.36"
+            ),
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+            "Referer": "https://www.wildberries.ru/",
+            "Origin": "https://www.wildberries.ru",
+            "Connection": "keep-alive",
+        }
+
+        self.base_url = "https://search.wb.ru/exactmatch/ru/common/v18/search"
+
+    def _sleep(self, attempt):
+        base = min(20, 1.2 * (2 ** attempt))
+        jitter = random.uniform(0.5, 3.0)
+        time.sleep(base + jitter)
+
+    def _handle_429(self, resp, attempt):
+        retry_after = resp.headers.get("Retry-After")
+
+        if retry_after:
+            wait = int(retry_after)
+        else:
+            wait = min(30, (2 ** attempt) + random.uniform(1, 5))
+
+        print(f"429 → sleep {wait:.1f}s")
+        time.sleep(wait)
+
+    def Search(self, request, context):
+        print(f"Received search request: {request.itemName}")
+        retries = 5
+        page = 1
+        query = request.itemName
+        params = {
+            "appType": 1,
+            "curr": "rub",
+            "dest": -1029256,
+            "page": page,
+            "query": query,
+            "resultset": "catalog",
+            "spp": 30,
+        }
+
+        for attempt in range(retries):
+            try:
+                time.sleep(random.uniform(1.5, 4.0))
+
+                resp = requests.get(
+                    self.base_url,
+                    params=params,
+                    headers=self.headers,
+                    timeout=10
+                )
+
+                print(resp.status_code)
+
+                if resp.status_code == 429:
+                    self._handle_429(resp, attempt)
+                    continue
+
+                if resp.status_code != 200:
+                    print(f"[HTTP {resp.status_code}] retry {attempt + 1}")
+                    self._sleep(attempt)
+                    continue
+
+                data = resp.json()
+                return wb_pb2.SearchResponse(status = 1, raw_json = json.dumps(data))
+
+            except Exception as e:
+                print("Exception:", e)
+                self._sleep(attempt)
+
+        return wb_pb2.SearchResponse(status = 0, raw_json = "")
+    
+
+# # ===== usage =====
+# if __name__ == "__main__":
+#     wb = WBClient()
+
+#     queries = ["сматфо", "кросовке", "вкнтилятор напольны"]
+
+#     for q in queries:
+#         print("\n========================")
+#         print("SEARCH:", q)
+
+#         items = wb.search(q)
+
+#         if not items:
+#             print("❌ empty result")
+#             continue
+
+#         for i in items[:5]:
+#             price = i['price_min']
+#             price_str = f"{price} ₽" if price else "нет цены"
+
+#             print(f"{i['name']} | {price_str}")

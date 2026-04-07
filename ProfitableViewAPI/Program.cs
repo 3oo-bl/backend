@@ -6,6 +6,8 @@ using ProfitableViewApp.Interfaces;
 using ProfitableViewApp.Services;
 using ProfitableViewCore;
 using ProfitableViewData;
+using ProfitableViewData.gRPC;
+using ProfitableViewData.Searchers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,8 +69,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+builder.Services.AddSingleton<WbGrpcClient>();
 builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddScoped<ISearcher, WbSearcher>();
 builder.Services.AddScoped<HttpClient>();
+builder.Services.BindClientFactory();
 builder.Services.BindParsers();
 
 var app = builder.Build();

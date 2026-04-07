@@ -6,12 +6,12 @@ namespace ProfitableViewApp.Services;
 
 public class ParseMarketService
 {
-    private readonly Dictionary<string, IParser> _parsers;
+    private readonly Dictionary<string, IMarketplaceParser> _parsers;
     private readonly ILogger _logger;
     
-    public ParseMarketService(IEnumerable<IParser> parsers, ILogger logger)
+    public ParseMarketService(IEnumerable<IMarketplaceParser> parsers, ILogger logger)
     {
-        _parsers = new Dictionary<string, IParser>();
+        _parsers = new Dictionary<string, IMarketplaceParser>();
         foreach (var parser in parsers)
         {
             if (_parsers.ContainsKey(parser.MarketName))
@@ -29,7 +29,7 @@ public class ParseMarketService
         var tasks = new List<Task<List<ProductDTO>>>();
         foreach (var market in request.Markets)
         {
-            if (_parsers.TryGetValue(market, out IParser parser))
+            if (_parsers.TryGetValue(market, out IMarketplaceParser parser))
             {
                 tasks.Add(parser.ParseProductList(market, request.RetryCount, request.RetryDelay));
             }

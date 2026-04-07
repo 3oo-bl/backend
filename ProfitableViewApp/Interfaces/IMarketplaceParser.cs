@@ -3,8 +3,9 @@ using ProfitableViewApp.DTOS;
 
 namespace ProfitableViewApp.Interfaces;
 
-public interface IParser
+public interface IMarketplaceParser
 {
+    public string BaseURL { get; }
     public HttpClient Client { get; }
     public string MarketName { get; }
     public bool IsRequested(string market);

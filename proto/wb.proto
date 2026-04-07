@@ -1,0 +1,17 @@
+syntax = "proto3";
+ 
+option csharp_namespace = "WbGrpc";
+
+service WbParser {
+  rpc Search (SearchRequest) returns (SearchResponse);
+}
+
+message SearchRequest {
+  string itemName = 1;
+  int32 quantity = 2;
+}
+
+message SearchResponse {
+  int32 status = 1;
+  string raw_json = 2;
+}
