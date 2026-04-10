@@ -14,9 +14,7 @@ def serve():
 
     with open(os.path.join(BASE_DIR, "../../secrets/server.crt"), "rb") as f:
         certificate = f.read()
-
-    print("KEY:", os.path.join(BASE_DIR, "../../secrets/server.key"))
-    print("CERT:", os.path.join(BASE_DIR, "../../secrets/server.crt"))
+        
     creds = grpc.ssl_server_credentials(
     [(private_key, certificate)],
     root_certificates=None,

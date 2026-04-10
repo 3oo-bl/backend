@@ -31,7 +31,7 @@ public class ParseMarketService
         {
             if (_parsers.TryGetValue(market, out IMarketplaceParser parser))
             {
-                tasks.Add(parser.ParseProductList(market, request.RetryCount, request.RetryDelay));
+                tasks.Add(parser.ParseProductList(market, request.Quantity));
             }
             else
                 _logger.LogWarning($"Парсера для магазина {market} не существует");

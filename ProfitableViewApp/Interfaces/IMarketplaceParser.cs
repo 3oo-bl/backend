@@ -9,5 +9,5 @@ public interface IMarketplaceParser
     public HttpClient Client { get; }
     public string MarketName { get; }
     public bool IsRequested(string market);
-    public Task<List<ProductDTO>> ParseProductList(string itemName, int? retryCount = 1, float? retryDelay = 0f);
+    public Task<List<ProductDTO>> ParseProductList(string itemName, int? quantity = 100);
 }

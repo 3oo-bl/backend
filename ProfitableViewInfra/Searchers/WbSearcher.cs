@@ -1,7 +1,7 @@
 using ProfitableViewApp.Interfaces;
-using ProfitableViewData.gRPC;
+using ProfitableViewDataInfra.gRPC;
 
-namespace ProfitableViewData.Searchers;
+namespace ProfitableViewDataInfra.Searchers;
 
 public class WbSearcher : ISearcher
 {

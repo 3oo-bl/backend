@@ -3,7 +3,7 @@ using System.Security.Cryptography.X509Certificates;
 using Grpc.Net.Client;
 using WbGrpc;
 
-namespace ProfitableViewData.gRPC;
+namespace ProfitableViewDataInfra.gRPC;
 
 public class WbGrpcClient
 {
@@ -23,12 +23,12 @@ public class WbGrpcClient
         _client = new WbParser.WbParserClient(channel);
     }
 
-    public async Task<string> SearchAsync(string itemName, int quantity)
+    public async Task<string> SearchAsync(string itemName, int page)
     {
         var request = new SearchRequest
         {
             ItemName = itemName,
-            Quantity = quantity
+            Page = page
         };
         var response = await _client.SearchAsync(request);
 

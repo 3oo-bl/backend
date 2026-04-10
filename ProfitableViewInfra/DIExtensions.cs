@@ -1,23 +1,26 @@
 using Microsoft.Extensions.DependencyInjection;
 using ProfitableViewApp.Interfaces;
-using ProfitableViewData.Parsers;
-using ProfitableViewData.Utils;
+using ProfitableViewDataInfra.Parsers;
+using ProfitableViewDataInfra.Utils;
+using ProfitableViewInfra.Services;
 
-namespace ProfitableViewData;
+namespace ProfitableViewInfra;
 
 public static class DIExtensions
 {
-    public static IServiceCollection BindParsers(this IServiceCollection services)
+    public static void BindParsers(this IServiceCollection services)
     {
         services.AddScoped<IMarketplaceParser, WbMarketplaceParser>();
-        
-        return services;
     }
 
-    public static IServiceCollection BindClientFactory(this IServiceCollection services)
+    public static void BindClientFactory(this IServiceCollection services)
     {
         services.AddScoped<HttpClientFactory>();
-        
-        return services;
+    }
+
+    public static void BindInfrastructureServices(this IServiceCollection services)
+    {
+        services.AddScoped<AuthentificationService>();
+        services.AddScoped<UpdatePrefsService>();
     }
 }

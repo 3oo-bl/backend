@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace ProfitableViewData.Utils;
+namespace ProfitableViewDataInfra.Utils;
 
 public class HttpClientFactory
 {

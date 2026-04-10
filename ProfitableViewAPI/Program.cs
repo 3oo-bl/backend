@@ -1,13 +1,16 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ProfitableViewApp.Interfaces;
-using ProfitableViewApp.Services;
 using ProfitableViewCore;
-using ProfitableViewData;
-using ProfitableViewData.gRPC;
-using ProfitableViewData.Searchers;
+using ProfitableViewInfra;
+using ProfitableViewDataInfra.gRPC;
+using ProfitableViewDataInfra.Searchers;
+using ProfitableViewDataInfra.Services;
+using ProfitableViewInfra.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,12 +72,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+var connection = builder.Configuration.GetConnectionString("DefaultConnection");
+
+var cs = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine(cs);
+
 builder.Services.AddSingleton<WbGrpcClient>();
-builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddScoped<AuthentificationService>();
+builder.Services.AddDbContext<DBContext>(options => options.UseNpgsql(connection));
+builder.Services.AddSingleton<PasswordHasher<string>>();
+builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<ILogger, Logger<AuthentificationService>>();
 builder.Services.AddScoped<ISearcher, WbSearcher>();
 builder.Services.AddScoped<HttpClient>();
 builder.Services.BindClientFactory();
 builder.Services.BindParsers();
+builder.Services.BindInfrastructureServices();
 
 var app = builder.Build();
 

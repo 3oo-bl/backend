@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Services;
+using ProfitableViewDataInfra.Services;
 
 namespace ProfitableViewCore;
 
@@ -56,7 +57,7 @@ public static class EndpointsExtensions
         app.MapPatch("/users",
             [Authorize] (HttpContext context, PrefsWeigthsDTO newPreferences) =>
         {
-            var userId = context.User.FindFirst(ClaimTypes.Email).Value;
+            var userId = context.User.FindFirst(ClaimTypes.PrimarySid).Value;
             return UpdatePreferencies(userId, newPreferences, logger);
         }).WithOpenApi();
         app.MapPost("/goods/search", [Authorize] ([FromBody] RequestStartDTO requestStartDto) =>
@@ -79,18 +80,18 @@ public static class EndpointsExtensions
             ++i;
             return Results.Ok();
         }).WithOpenApi();
-        app.MapPost("/auth/login", (AuthenticationService authService, string email, string password) =>
+        app.MapPost("/auth/login", (TokenService tokenService, string email, string password) =>
         {
             if (!_fakeDB.Any(x => x.Value.Email == email && x.Value.Password == password))
                 return Results.NotFound();
             
-            return Results.Ok(authService.GenerateToken(email));
+            return Results.Ok(tokenService.GenerateToken(email));
         }).WithOpenApi();
     }
 
     private static HttpStatusCode UpdatePreferencies(string login, PrefsWeigthsDTO newPreferences, ILogger logger)
     {
-        var user = _fakeDB.FirstOrDefault(x => x.Value.Email == login).Value;
+        var user = _fakeDB.FirstOrDefault(x => x.Value.Id.ToString() == login).Value;
         user.Preferences = newPreferences;
         logger.LogInformation("Обновлено.");
         return HttpStatusCode.NoContent;

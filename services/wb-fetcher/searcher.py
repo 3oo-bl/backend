@@ -46,7 +46,7 @@ class WBParserService(wb_pb2_grpc.WbParserServicer):
     def Search(self, request, context):
         print(f"Received search request: {request.itemName}")
         retries = 5
-        page = 1
+        page = request.page
         query = request.itemName
         params = {
             "appType": 1,

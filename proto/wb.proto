@@ -8,7 +8,7 @@ service WbParser {
 
 message SearchRequest {
   string itemName = 1;
-  int32 quantity = 2;
+  int32 page = 2;
 }
 
 message SearchResponse {
