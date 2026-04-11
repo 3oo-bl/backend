@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp.DTOS;
 using ProfitableViewDataInfra;
-using ProfitableViewDataInfra.Services;
 
 namespace ProfitableViewInfra.Services;
 
@@ -12,15 +11,15 @@ public class AuthentificationService
     private readonly DBContext _dbContext;
     private readonly ILogger _logger;
     private readonly PasswordHasher<string> _hasher;
-    private readonly TokenService _tokenService;
+    private readonly AuthTokenService _authTokenService;
     
     public AuthentificationService(DBContext dbContext, ILogger logger,
-        PasswordHasher<string> hasher, TokenService tokenService)
+        PasswordHasher<string> hasher, AuthTokenService authTokenService)
     {
         _dbContext = dbContext;
         _logger = logger;
         _hasher = hasher;
-        _tokenService = tokenService;
+        _authTokenService = authTokenService;
     }
 
     public IResult Register(UserDTO newUser)
@@ -42,6 +41,6 @@ public class AuthentificationService
         var result = _hasher.VerifyHashedPassword(email, user.Password, password);
         if (result is PasswordVerificationResult.Failed)
             return Results.NotFound("Неверное имя пользователя или пароль");
-        return Results.Ok(_tokenService.GenerateToken(user.Id.ToString()));
+        return Results.Ok(_authTokenService.GenerateAuthToken(user.Id.ToString()));
     }
 }

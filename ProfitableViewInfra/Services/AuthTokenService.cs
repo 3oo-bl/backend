@@ -4,18 +4,18 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
-namespace ProfitableViewDataInfra.Services;
+namespace ProfitableViewInfra.Services;
 
-public class TokenService
+public class AuthTokenService
 {
     private readonly IConfiguration _config;
 
-    public TokenService(IConfiguration config)
+    public AuthTokenService(IConfiguration config)
     {
         this._config = config;
     }
     
-    public string GenerateToken(string id)
+    public string GenerateAuthToken(string id)
     {
         var claims = new List<Claim> {new(ClaimTypes.PrimarySid, id)};
 

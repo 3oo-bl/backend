@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Services;
-using ProfitableViewDataInfra.Services;
+using ProfitableViewInfra.Services;
 
 namespace ProfitableViewCore;
 
@@ -80,12 +80,12 @@ public static class EndpointsExtensions
             ++i;
             return Results.Ok();
         }).WithOpenApi();
-        app.MapPost("/auth/login", (TokenService tokenService, string email, string password) =>
+        app.MapPost("/auth/login", (AuthTokenService authTokenService, string email, string password) =>
         {
             if (!_fakeDB.Any(x => x.Value.Email == email && x.Value.Password == password))
                 return Results.NotFound();
             
-            return Results.Ok(tokenService.GenerateToken(email));
+            return Results.Ok(authTokenService.GenerateAuthToken(email));
         }).WithOpenApi();
     }
 

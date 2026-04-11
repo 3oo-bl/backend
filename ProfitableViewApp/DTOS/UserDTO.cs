@@ -7,7 +7,7 @@ namespace ProfitableViewApp.DTOS;
 public class UserDTO
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; init; }
+    public int Id { get; init; } //ДОСТУПНО ИЗ ЗАПРОСА, НАДО ЧТО-ТО С ЭТИМ СДЕЛАТЬ
     public string Name { get; set; }
     public string Email { get; set; }
     public string Password { get; set; }
