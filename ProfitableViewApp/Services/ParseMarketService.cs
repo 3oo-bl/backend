@@ -50,7 +50,7 @@ public class ParseMarketService
         }
         var token = Guid.NewGuid().ToString("N");
         _pollingService.AddJob(token);
-        _ = RunJobAsync(token, tasks);
+        _ = Task.Run(() => RunJobAsync(token, tasks));
         return token;
     }
 

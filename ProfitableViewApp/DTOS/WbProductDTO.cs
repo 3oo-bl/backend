@@ -11,7 +11,7 @@ public class WbProductDTO
     public string Name { get; set; }
     
     [JsonPropertyName("sizes")]
-    public List<SizesDTO> Sizes { get; set; }
+    public List<Sizes> Sizes { get; set; }
     
     [JsonPropertyName("brand")]
     public string Brand { get; set; }
@@ -32,13 +32,13 @@ public class WbProductDTO
     public int TotalQuantity { get; set; }
 }
 
-public class SizesDTO
+public class Sizes
 {
     [JsonPropertyName("price")]
-    public PriceDTO Price { get; set; }
+    public WbPrice WbPrice { get; set; }
 }
 
-public class PriceDTO
+public class WbPrice
 {
     [JsonPropertyName("basic")]
     public int Basic { get; set; }

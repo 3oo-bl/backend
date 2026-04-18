@@ -82,38 +82,29 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
             data = json.loads(json_content)
             print("JSON в обработке")
 
-            widget_states = data.get("widgetStates", {})
+            return data.get("widgetStates", {})
+            # result = {}
+            # for key, value in widget_states.items():
+            #     try:
+            #         parsed = json.loads(value)
+            #         if key.startswith("webStickyProducts-"):
+            #             result["name"] = parsed.get("name")
+            #             result["image"] = parsed.get("coverImageUrl")
 
-            result = {}
+            #             seller = parsed.get("seller", {})
+            #             result["seller_name"] = seller.get("name")
+            #             result["seller_inn"] = seller.get("inn")
 
-            for key, value in widget_states.items():
-                if key.startswith("webStickyProducts-"):
-                    try:
-                        sticky = json.loads(value)
-                        result["name"] = sticky.get("name")
-                        result["image"] = sticky.get("coverImageUrl")
+            #         elif key.startswith("webPrice-"):
+            #             result["price"] = parsed.get("price")
+            #             result["card_price"] = parsed.get("cardPrice")
 
-                        seller = sticky.get("seller", {})
-                        result["seller_name"] = seller.get("name")
-                        result["seller_inn"] = seller.get("inn")
-                    except:
-                        pass
-
-            for key, value in widget_states.items():
-                if key.startswith("webPrice-"):
-                    try:
-                        price = json.loads(value)
-                        result["price"] = price.get("price")
-                        result["card_price"] = price.get("cardPrice")
-                    except:
-                        pass
-
-            return result
+            #     except:
+            #         continue
 
         except Exception as e:
             logger.error(f"parse error: {e}")
             return {}
-
 
     def cleanup(self):
         if self.selenium_manager:

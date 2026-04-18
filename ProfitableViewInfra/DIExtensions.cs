@@ -11,6 +11,7 @@ public static class DIExtensions
     public static void BindParsers(this IServiceCollection services)
     {
         services.AddScoped<IMarketplaceParser, WbMarketplaceParser>();
+        services.AddScoped<IMarketplaceParser, OzonMarketplaceParser>();
     }
 
     public static void BindClientFactory(this IServiceCollection services)

@@ -31,7 +31,7 @@ public class OzonGrpcClient : IGrpcClient
         WbGrpc.SearchResponse response;
         try
         {
-            response = _client.Search(request);
+            response = await _client.SearchAsync(request);
         }
         catch (Exception e)
         {

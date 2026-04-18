@@ -70,7 +70,7 @@ public class WbMarketplaceParser : IMarketplaceParser
 
     internal async Task<ProductDTO> ParseProduct(WbProductDTO rawProduct)
     {
-        var priceInfo = rawProduct.Sizes[0].Price;
+        var priceInfo = rawProduct.Sizes[0].WbPrice;
         var productDTO = new ProductDTO
         {
             Id = rawProduct.Id.ToString(),

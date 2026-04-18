@@ -10,6 +10,7 @@ using ProfitableViewCore;
 using ProfitableViewInfra;
 using ProfitableViewDataInfra.gRPC;
 using ProfitableViewDataInfra.Searchers;
+using ProfitableViewInfra.Searchers;
 using ProfitableViewInfra.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -78,6 +79,7 @@ var cs = builder.Configuration.GetConnectionString("DefaultConnection");
 Console.WriteLine(cs);
 
 builder.Services.AddSingleton<WbGrpcClient>();
+builder.Services.AddSingleton<OzonGrpcClient>();
 builder.Services.AddScoped<AuthentificationService>();
 builder.Services.AddDbContext<DBContext>(options => options.UseNpgsql(connection));
 builder.Services.AddSingleton<PasswordHasher<string>>();
@@ -86,6 +88,7 @@ builder.Services.AddScoped<ILogger, Logger<AuthentificationService>>();
 builder.Services.AddSingleton<IPollingService, InMemoryPollingService>();
 builder.Services.AddScoped<ParseMarketService>();
 builder.Services.AddScoped<ISearcher, WbSearcher>();
+builder.Services.AddScoped<ISearcher, OzonSearcher>();
 builder.Services.AddScoped<HttpClient>();
 builder.Services.BindClientFactory();
 builder.Services.BindParsers();

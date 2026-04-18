@@ -168,43 +168,6 @@ class SeleniumManager:
             finally:
                 self.driver = None
                 self.wait = None
-
-    # def wait_for_json_response(self, timeout: int = 90) -> Optional[str]:
-    #     if not self.driver:
-    #         return None
-            
-    #     try:
-    #         logger.debug("Ожидание JSON ответа...")
-    #         start_time = time.time()
-    #         time.sleep(1.5)
-    #         page_source = self.driver.page_source
-    #         while time.time() - start_time < timeout:
-    #             try:
-    #                 page_source = self.driver.page_source
-    #                 json_content = self._extract_json_from_html(page_source)
-                    
-    #                 if json_content:
-    #                     try:
-    #                         data = json.loads(json_content)
-    #                         if 'widgetStates' in data:
-    #                             logger.debug("JSON ответ с widgetStates найден")
-    #                             return json_content
-    #                     except json.JSONDecodeError:
-    #                         pass
-                    
-    #                 time.sleep(2.5)
-                    
-    #             except Exception as e:
-    #                 logger.debug(f"Ошибка проверки содержимого страницы: {e}")
-    #                 time.sleep(2.5)
-    #                 continue
-            
-    #         logger.warning(f"Таймаут ожидания JSON ответа после {timeout} секунд")
-    #         return self._extract_json_from_html(self.driver.page_source)
-            
-    #     except Exception as e:
-    #         logger.error(f"Ошибка ожидания JSON ответа: {e}")
-    #         return None
         
     def get_json_via_logs(self):
         try:

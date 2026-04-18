@@ -21,12 +21,12 @@ public class WbMarketplaceParserTests
     }
 
     [Test]
-    public async Task ParseResopnse_Should_ReturnDTOList()
+    public async Task ParseResponse_Should_ReturnDTOList()
     {
         var parser = new WbMarketplaceParser(new Logger<WbMarketplaceParser>(new  LoggerFactory()), new HttpClient(), new WbSearcher(new WbGrpcClient()));
         var response = File.ReadAllText("test_products.json");
         
         var parsedProducts = await parser.ParseResponse(response);
-        Assert.NotNull(parsedProducts);
+        Assert.That(parsedProducts.Count, Is.GreaterThan(0));
     }
 }

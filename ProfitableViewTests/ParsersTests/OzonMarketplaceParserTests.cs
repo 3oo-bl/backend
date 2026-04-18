@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using ProfitableViewDataInfra.gRPC;
 using ProfitableViewDataInfra.Parsers;
 using ProfitableViewDataInfra.Searchers;
+using ProfitableViewInfra.Searchers;
 
 namespace ProfitableViewTests.ParsersTests;
 
@@ -9,13 +10,13 @@ namespace ProfitableViewTests.ParsersTests;
 public class OzonMarketplaceParserTests
 {
     [Test]
-    public async Task A()
+    public void ParseResponse_Should_ReturnsDTOList()
     {
         var parser = new OzonMarketplaceParser(new Logger<OzonMarketplaceParser>(new LoggerFactory()),
             new HttpClient(), new OzonSearcher(new OzonGrpcClient()));
-        var quantity = 25;
+        var response = File.ReadAllText("ozonProducts.json");
         
-        parser.ParseProductList("линейка", quantity);
-        Assert.That(true, Is.False);
+        var parsedProducts = parser.ParseResponse(response);
+        Assert.That(parsedProducts.Count, Is.GreaterThan(0));
     }
 }
