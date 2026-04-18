@@ -1,11 +1,12 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Grpc.Net.Client;
+using ProfitableViewApp.Interfaces;
 using WbGrpc;
 
 namespace ProfitableViewDataInfra.gRPC;
 
-public class WbGrpcClient
+public class WbGrpcClient : IGrpcClient
 {
     private readonly WbParser.WbParserClient _client;
 

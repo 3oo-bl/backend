@@ -2,9 +2,9 @@ import os
 
 import grpc
 from concurrent import futures
-from searcher import WBParserService
-import wb_pb2_grpc
-import ssl
+from searchers.wb_searcher import WBParserService
+from searchers.ozon_parser import OzonParserService
+import searchers_pb2_grpc
 
 def serve():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +23,8 @@ def serve():
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 
-    wb_pb2_grpc.add_WbParserServicer_to_server(WBParserService(), server)
+    searchers_pb2_grpc.add_WbParserServicer_to_server(WBParserService(), server)
+    searchers_pb2_grpc.add_OzonParserServicer_to_server(OzonParserService(), server)
     server.add_secure_port('127.0.0.1:50051', creds)
     print("Server started on port 50051")
     server.start()

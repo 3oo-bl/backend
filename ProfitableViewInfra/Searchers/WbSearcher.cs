@@ -12,8 +12,8 @@ public class WbSearcher : ISearcher
         _client = client;
     }
     
-    public Task<string> Search(string query)
+    public Task<string> Search(string query, int page)
     {
-        return _client.SearchAsync(query, 10);
+        return _client.SearchAsync(query, page);
     }
 }

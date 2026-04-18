@@ -15,7 +15,6 @@ public class WbMarketplaceParser : IMarketplaceParser
     private readonly ILogger<WbMarketplaceParser> _logger;
     public HttpClient Client { get; }
     private readonly ISearcher _searcher;
-    public string BaseURL => "https://search.wb.ru/exactmatch/ru/common/v18/search";
 
     public string MarketName
     {
@@ -30,11 +29,6 @@ public class WbMarketplaceParser : IMarketplaceParser
         Client.DefaultRequestHeaders.ExpectContinue = false;
         _searcher = searcher;
     }
-    
-    public bool IsRequested(string market)
-    {
-        throw new NotImplementedException();
-    }
 
     public async Task<List<ProductDTO>> ParseProductList(string itemName, int? quantity = 100)
     {
@@ -42,7 +36,7 @@ public class WbMarketplaceParser : IMarketplaceParser
         var pages = (quantity + 99) / 100;
         for (var i = 1; i <= pages; ++i)
         {
-            var response = await _searcher.Search(itemName);
+            var response = await _searcher.Search(itemName, i);
             if (string.IsNullOrEmpty(response))
                 continue;
             List<ProductDTO> parsed;

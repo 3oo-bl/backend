@@ -6,6 +6,15 @@ service WbParser {
   rpc Search (SearchRequest) returns (SearchResponse);
 }
 
+service OzonParser {
+  rpc Search (OzonSearchRequest) returns (SearchResponse);
+}
+
+message OzonSearchRequest {
+  string itemName = 1;
+  int32 quantity = 2;
+}
+
 message SearchRequest {
   string itemName = 1;
   int32 page = 2;

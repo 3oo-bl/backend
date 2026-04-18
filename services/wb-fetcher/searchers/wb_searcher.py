@@ -4,11 +4,11 @@ import requests
 import time
 import random
 
-import wb_pb2
-import wb_pb2_grpc
+import searchers_pb2
+import searchers_pb2_grpc
 
 
-class WBParserService(wb_pb2_grpc.WbParserServicer):
+class WBParserService(searchers_pb2_grpc.WbParserServicer):
     def __init__(self):
         self.session = requests.Session()
 
@@ -81,33 +81,10 @@ class WBParserService(wb_pb2_grpc.WbParserServicer):
                     continue
 
                 data = resp.json()
-                return wb_pb2.SearchResponse(status = 1, raw_json = json.dumps(data))
+                return searchers_pb2.SearchResponse(status = 1, raw_json = json.dumps(data))
 
             except Exception as e:
                 print("Exception:", e)
                 self._sleep(attempt)
 
-        return wb_pb2.SearchResponse(status = 0, raw_json = "")
-    
-
-# # ===== usage =====
-# if __name__ == "__main__":
-#     wb = WBClient()
-
-#     queries = ["сматфо", "кросовке", "вкнтилятор напольны"]
-
-#     for q in queries:
-#         print("\n========================")
-#         print("SEARCH:", q)
-
-#         items = wb.search(q)
-
-#         if not items:
-#             print("❌ empty result")
-#             continue
-
-#         for i in items[:5]:
-#             price = i['price_min']
-#             price_str = f"{price} ₽" if price else "нет цены"
-
-#             print(f"{i['name']} | {price_str}")
+        return searchers_pb2.SearchResponse(status = 0, raw_json = "")
