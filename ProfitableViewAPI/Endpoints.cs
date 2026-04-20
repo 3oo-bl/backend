@@ -34,9 +34,9 @@ public static class Endpoints
                 return Results.BadRequest();
             if (status is ParsingJobStates.Pending)
                 return Results.Accepted();
-            var result = pollingService.GetJobResult(jobId);
-            if (result.Products is not null)
-                return Results.Ok(result.Products);
+            var result = pollingService.GetProductList(jobId, requestResultsDto);
+            if (result is not null)
+                return Results.Ok(result);
             return Results.Problem();
         }).WithOpenApi();
     }

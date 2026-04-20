@@ -25,7 +25,9 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
     def Search(self, request, context):
         links = self.OzonLinksParser.parse_links(request)
         if links.status == 1:
-            return searchers_pb2.SearchResponse(status = 1, raw_json = json.dumps(self.parse_products(links.raw_json.split("\n"))))
+            response = searchers_pb2.SearchResponse(status = 1, raw_json = json.dumps(self.parse_products(links.raw_json.split("\n"))))
+            self.cleanup()
+            return response
         self.cleanup()
         return links
     
@@ -109,3 +111,11 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
     def cleanup(self):
         if self.selenium_manager:
             self.selenium_manager.close()
+        if self.driver:
+            try:
+                self.driver.quit()
+                print("Драйвер парсера закрыт успешно")
+            except Exception as e:
+                print(f"Ошибка закрытия парсера драйвера: {e}")
+        else:
+            print("Драйвер не инициализирован, закрытие не требуется")

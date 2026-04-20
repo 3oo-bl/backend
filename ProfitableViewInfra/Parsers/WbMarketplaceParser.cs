@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Interfaces;
+using ProfitableViewDataInfra.Searchers;
 using ProfitableViewDataInfra.Utils;
 
 namespace ProfitableViewDataInfra.Parsers;
@@ -21,7 +22,7 @@ public class WbMarketplaceParser : IMarketplaceParser
         get => "Wildberries";
     }
 
-    public WbMarketplaceParser(ILogger<WbMarketplaceParser> logger, HttpClient client, ISearcher searcher)
+    public WbMarketplaceParser(ILogger<WbMarketplaceParser> logger, HttpClient client, WbSearcher searcher)
     {
         _logger = logger;
         Client = client;
@@ -75,8 +76,8 @@ public class WbMarketplaceParser : IMarketplaceParser
         {
             Id = rawProduct.Id.ToString(),
             Name = rawProduct.Name,
-            Cost = priceInfo.Basic / 100,
-            CostWithDiscount =priceInfo.Product / 100,
+            Cost = priceInfo.Product / 100,
+            CostWithDiscount = priceInfo.Basic / 100,
             Subcategory = null, //#TODO Разобраться, что это и где можно взять
             Category = null, //#TODO Разобраться, что это и где можно взять
             Cashback = priceInfo.Return / 100,

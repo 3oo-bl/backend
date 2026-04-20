@@ -1,4 +1,5 @@
 using Grpc.Net.Client;
+using Microsoft.Extensions.Logging;
 using ProfitableViewApp.Interfaces;
 using WbGrpc;
 
@@ -7,6 +8,7 @@ namespace ProfitableViewDataInfra.gRPC;
 public class OzonGrpcClient : IGrpcClient
 {
     private readonly OzonParser.OzonParserClient _client;
+    
     public OzonGrpcClient()
     {
         var handler = new SocketsHttpHandler
@@ -23,6 +25,7 @@ public class OzonGrpcClient : IGrpcClient
 
     public async Task<string> SearchAsync(string itemName, int quantity)
     {
+        Console.WriteLine("Парсинг озоза начался");
         var request = new OzonSearchRequest
         {
             ItemName = itemName,

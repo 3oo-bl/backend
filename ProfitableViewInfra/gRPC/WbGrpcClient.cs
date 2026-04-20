@@ -26,6 +26,7 @@ public class WbGrpcClient : IGrpcClient
 
     public async Task<string> SearchAsync(string itemName, int page)
     {
+        Console.WriteLine("Парсинг вб начался");
         var request = new SearchRequest
         {
             ItemName = itemName,

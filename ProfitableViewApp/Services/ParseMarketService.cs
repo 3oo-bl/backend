@@ -1,3 +1,6 @@
+using System.IO.Hashing;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Interfaces;
@@ -13,6 +16,7 @@ public class ParseMarketService
     public ParseMarketService(IEnumerable<IMarketplaceParser> parsers, ILogger logger, IPollingService pollingService)
     {
         _parsers = new Dictionary<string, IMarketplaceParser>();
+        _logger = logger;
         foreach (var parser in parsers)
         {
             if (_parsers.ContainsKey(parser.MarketName))
@@ -20,9 +24,10 @@ public class ParseMarketService
                 throw new InvalidOperationException($"Сервис {parser.MarketName} пытался добавиться дважды!");
             }
 
+            _logger.LogInformation($"Зарегистрирован сервис {parser.MarketName}");
+
             _parsers.Add(parser.MarketName, parser);
         }
-        _logger = logger;
         _pollingService = pollingService;
     }
 
@@ -31,7 +36,7 @@ public class ParseMarketService
         var tasks = new List<Task<List<ProductDTO>>>();
         if (request.Markets is null)
         {
-            _logger.LogInformation("Магзинов в запросе не было, парсим всё.");
+            _logger.LogInformation("Магазинов в запросе не было, парсим всё.");
             foreach (var parser in _parsers.Values)
                 tasks.Add(parser.ParseProductList(parser.MarketName, request.Quantity));
         }
@@ -48,10 +53,18 @@ public class ParseMarketService
             _logger.LogWarning("Нет подходящих под запрос парсеров или список магазинов пуст.");
             return null;
         }
-        var token = Guid.NewGuid().ToString("N");
+
+        var token = GetHash(request.Item);
         _pollingService.AddJob(token);
         _ = Task.Run(() => RunJobAsync(token, tasks));
         return token;
+    }
+
+    private string GetHash(string input)
+    {
+        var data = Encoding.UTF8.GetBytes(input);
+        var hash = XxHash3.HashToUInt64(data);
+        return hash.ToString();
     }
 
     private async Task RunJobAsync(string token, List<Task<List<ProductDTO>>> tasks)

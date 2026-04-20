@@ -162,9 +162,9 @@ class SeleniumManager:
         if self.driver:
             try:
                 self.driver.quit()
-                logger.debug("Драйвер закрыт успешно")
+                print("Драйвер менеджера закрыт успешно")
             except Exception as e:
-                logger.error(f"Ошибка закрытия драйвера: {e}")
+                print(f"Ошибка закрытия драйвера: {e}")
             finally:
                 self.driver = None
                 self.wait = None

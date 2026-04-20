@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp;
 using ProfitableViewApp.DTOS;
@@ -62,10 +61,29 @@ public class InMemoryPollingService : IPollingService
         }
     }
 
+    public List<ProductDTO>? GetProductList(string token, RequestResultsDTO request)
+    {
+        var jobResult = GetJobResult(token);
+        if (jobResult.State is ParsingJobStates.Failed)
+            return null; // #TODO Exception не дремлет, он лежит в jobResult :(
+        var products = jobResult.Products!.Skip(request.Skip)
+            .Take(request.Take);
+        if (request.MinPrice is not null)
+            products = products.Where(x => x.Cost > request.MinPrice.Value);
+        if (request.MaxPrice is not null)
+            products = products.Where(x => x.Cost < request.MaxPrice.Value);
+        if (request.OrderBy is not null)
+        {
+            if (request.OrderBy == "asc")
+                products = products.OrderBy(x => x.Cost);
+            if (request.OrderBy == "desc")
+                products = products.OrderByDescending(x => x.Cost);
+        }
+        return products.ToList();
+    }
+
     public JobResult GetJobResult(string token)
     {
-        var job = _jobs[token];
-        _jobs.Remove(token);
-        return job;
+        return _jobs[token];
     }
 }

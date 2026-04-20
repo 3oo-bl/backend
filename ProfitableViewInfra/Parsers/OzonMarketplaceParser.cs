@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Interfaces;
+using ProfitableViewInfra.Searchers;
 
 namespace ProfitableViewDataInfra.Parsers;
 
@@ -21,7 +22,7 @@ public class OzonMarketplaceParser : IMarketplaceParser
     private readonly ILogger<OzonMarketplaceParser> _logger;
     private readonly ISearcher _searcher;
 
-    public OzonMarketplaceParser(ILogger<OzonMarketplaceParser> logger, HttpClient client, ISearcher searcher)
+    public OzonMarketplaceParser(ILogger<OzonMarketplaceParser> logger, HttpClient client, OzonSearcher searcher)
     {
         _logger = logger;
         Client = client;
