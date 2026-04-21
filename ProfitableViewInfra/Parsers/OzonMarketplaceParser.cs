@@ -15,6 +15,7 @@ public class OzonMarketplaceParser : IMarketplaceParser
         public JsonElement Sticky { get; init; }
         public JsonElement Price { get; init; }
         public JsonElement WebSingleProductScore { get; init; }
+        public JsonElement WebGallery { get; init; }
     }
     
     public HttpClient Client { get; }
@@ -73,7 +74,8 @@ public class OzonMarketplaceParser : IMarketplaceParser
             Seller = context.Sticky.GetProperty("seller").GetProperty("name").GetString()!,
             Rating = rating.score,
             Reviews = rating.reviewsCount,
-            Link = $"https://www.ozon.ru/product/{id}"
+            Link = $"https://www.ozon.ru/product/{id}",
+            ImageLink = context.WebGallery.GetProperty("coverImage").GetString(),
         };
     }
 
@@ -82,6 +84,7 @@ public class OzonMarketplaceParser : IMarketplaceParser
         JsonElement? stickyProductsInfo = null;
         JsonElement? webPriceInfo = null;
         JsonElement? webSingleProductScore = null;
+        JsonElement? webGallery = null;
         foreach (var item in rawProduct.EnumerateArray())
         {
             foreach (var prop in item.EnumerateObject())
@@ -99,13 +102,16 @@ public class OzonMarketplaceParser : IMarketplaceParser
                     webPriceInfo = root.Clone();
                 else if (name.StartsWith("webSingleProductScore"))
                     webSingleProductScore = root.Clone();
+                else if (name.StartsWith("webGallery-"))
+                    webGallery = root.Clone();
             }
         }
         return new ProductJsonContext
         {
             Sticky = stickyProductsInfo ?? throw new Exception("sticky missing"),
             Price = webPriceInfo ?? throw new Exception("price missing"),
-            WebSingleProductScore = webSingleProductScore ?? throw new Exception("score missing")
+            WebSingleProductScore = webSingleProductScore ?? throw new Exception("score missing"),
+            WebGallery = webGallery ?? throw new Exception("web gallery missing"),
         };
     }
 
