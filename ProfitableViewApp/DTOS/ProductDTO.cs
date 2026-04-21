@@ -16,4 +16,5 @@ public class ProductDTO
     public int Reviews { get; set; }
     public int Remaining { get; set; }
     public string Link { get; set; }
+    public string ImageLink { get; set; }
 }

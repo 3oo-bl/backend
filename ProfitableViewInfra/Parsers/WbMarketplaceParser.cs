@@ -41,7 +41,7 @@ public class WbMarketplaceParser : IMarketplaceParser
             if (string.IsNullOrEmpty(response))
                 continue;
             List<ProductDTO> parsed;
-            if (i * 100 >= quantity)
+            if (i * 100 > quantity)
                 parsed = ParseResponse(response, quantity % 100).Result;
             else
                 parsed = ParseResponse(response).Result;
@@ -72,9 +72,10 @@ public class WbMarketplaceParser : IMarketplaceParser
     internal async Task<ProductDTO> ParseProduct(WbProductDTO rawProduct)
     {
         var priceInfo = rawProduct.Sizes[0].WbPrice;
+        var id = rawProduct.Id;
         var productDTO = new ProductDTO
         {
-            Id = rawProduct.Id.ToString(),
+            Id = id.ToString(),
             Name = rawProduct.Name,
             Cost = priceInfo.Product / 100,
             CostWithDiscount = priceInfo.Basic / 100,
@@ -87,7 +88,8 @@ public class WbMarketplaceParser : IMarketplaceParser
             Rating = (float)rawProduct.ReviewRating,
             Reviews = rawProduct.Feedbacks,
             Remaining = rawProduct.TotalQuantity,
-            Link = $"https://www.wildberries.ru/catalog/{rawProduct.Id}/detail.aspx"
+            Link = $"https://www.wildberries.ru/catalog/{rawProduct.Id}/detail.aspx",
+            ImageLink = $"https://ekt-basket-cdn-06bl.geobasket.ru/vol{id / 100000}/part{id / 1000}/{id}/images/big/1.webp"
         };
         return productDTO;
     }
