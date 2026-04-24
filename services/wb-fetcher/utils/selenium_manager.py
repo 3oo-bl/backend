@@ -19,6 +19,9 @@ class SeleniumManager:
         self.headless = headless
 
     def create_driver_with_logging(self) -> webdriver.Chrome:
+        if self.driver:
+            logger.warning("Драйвер уже создан, повторная инициализация пропущена")
+            return self.driver
         chrome_options = Options()
         
         chrome_options.add_argument("--no-sandbox")
@@ -62,7 +65,7 @@ class SeleniumManager:
             driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             
             self.driver = driver
-            self.wait = 0#WebDriverWait(driver, 5) #was 20
+            self.wait = WebDriverWait(driver, 5)#self.wait = 0 #was 20
             
             logger.info("Chrome драйвер с логированием создан успешно")
             return driver
@@ -162,13 +165,13 @@ class SeleniumManager:
         if self.driver:
             try:
                 self.driver.quit()
-                print("Драйвер менеджера закрыт успешно")
+                logger.info("Chrome driver закрыт")
             except Exception as e:
-                print(f"Ошибка закрытия драйвера: {e}")
+                logger.error(f"Ошибка при закрытии драйвера: {e}")
             finally:
                 self.driver = None
                 self.wait = None
-        
+            
     def get_json_via_logs(self):
         try:
             logs = self.driver.get_log("performance")

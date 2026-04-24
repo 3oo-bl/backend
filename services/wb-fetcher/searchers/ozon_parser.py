@@ -1,10 +1,8 @@
 import json
 import logging
 import re
+import threading
 import time
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import searchers_pb2
 import searchers_pb2_grpc
@@ -13,28 +11,35 @@ from utils.selenium_manager import SeleniumManager
 
 logger = logging.getLogger(__name__)
 
+
 class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
     def __init__(self):
-        self.OzonLinksParser = OzonLinksParser()
-        self.selenium_manager = SeleniumManager()
-        self.driver = self.selenium_manager.create_driver_with_logging()
-        self.results = None
+        self._semaphore = threading.Semaphore(3)
         self.api_url_start = "https://www.ozon.ru/api/composer-api.bx/page/json/v2?url=/product/"
         self.api_url_end = "&__rr=1"
 
     def Search(self, request, context):
-        links = self.OzonLinksParser.parse_links(request)
-        if links.status == 1:
-            response = searchers_pb2.SearchResponse(status = 1, raw_json = json.dumps(self.parse_products(links.raw_json.split("\n"))))
-            self.cleanup()
-            return response
-        self.cleanup()
-        return links
-    
-    def parse_products(self, products):
+        with self._semaphore:
+            selenium_manager = SeleniumManager()
+            links_parser = OzonLinksParser(selenium_manager)
+            try:
+                selenium_manager.create_driver_with_logging()
+                links = links_parser.parse_links(request)
+                if links.status == 1:
+                    return searchers_pb2.SearchResponse(
+                        status=1,
+                        raw_json=json.dumps(self.parse_products(links.raw_json.split("\n"), selenium_manager))
+                    )
+                return links
+            except Exception as e:
+                logger.error(f"Ошибка в Search: {e}", exc_info=True)
+                return searchers_pb2.SearchResponse(status=0, raw_json="Произошла ошибка при обработке запроса")
+            finally:
+                selenium_manager.close()
+
+    def parse_products(self, products, selenium_manager):
         print(f"Collected product links: {len(products)}")
         articles = set()
-
         for url in products:
             article = self.extract_article_from_url(url)
             if article:
@@ -42,80 +47,44 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
 
         print(f"Прочитано артикулов: {len(articles)}")
         results = []
-
         for article in articles:
-            data = self.wait_product_info(article)
+            data = self.wait_product_info(article, selenium_manager)
             if data:
                 results.append(data)
-
         return results
-        
-            
+
     def extract_article_from_url(self, url: str) -> str:
         try:
             match = re.search(r'/product/[^/]+-(\d+)/', url)
             return match.group(1) if match else ""
         except Exception:
             return ""
-        
-    def wait_product_info(self, article):
+
+    def wait_product_info(self, article, selenium_manager):
         results = []
-        max_retries = 3
         full_url = f"{self.api_url_start}{article}{self.api_url_end}"
-        for attempt in range(max_retries):
-            if not self.selenium_manager.navigate_to_url(full_url):
-                logger.warning(f"Не удалось загрузить API URL: {full_url} на попытке {attempt + 1}")
-                if attempt < max_retries - 1:
+        for attempt in range(3):
+            if not selenium_manager.navigate_to_url(full_url):
+                logger.warning(f"Не удалось загрузить {full_url} на попытке {attempt + 1}")
+                if attempt < 2:
                     time.sleep(2)
                     continue
                 return "Не удалось загрузить данные о товаре"
-            json_content = self.selenium_manager.get_json_via_logs()
+            json_content = selenium_manager.get_json_via_logs()
             if not json_content:
-                if attempt < max_retries - 1:
+                if attempt < 2:
                     time.sleep(2)
                     continue
                 return "Не удалось получить данные о товаре"
             results.append(self.collect_product_info(json_content))
             break
         return results
-    
+
     def collect_product_info(self, json_content):
         try:
             data = json.loads(json_content)
             print("JSON в обработке")
-
             return data.get("widgetStates", {})
-            # result = {}
-            # for key, value in widget_states.items():
-            #     try:
-            #         parsed = json.loads(value)
-            #         if key.startswith("webStickyProducts-"):
-            #             result["name"] = parsed.get("name")
-            #             result["image"] = parsed.get("coverImageUrl")
-
-            #             seller = parsed.get("seller", {})
-            #             result["seller_name"] = seller.get("name")
-            #             result["seller_inn"] = seller.get("inn")
-
-            #         elif key.startswith("webPrice-"):
-            #             result["price"] = parsed.get("price")
-            #             result["card_price"] = parsed.get("cardPrice")
-
-            #     except:
-            #         continue
-
         except Exception as e:
             logger.error(f"parse error: {e}")
             return {}
-
-    def cleanup(self):
-        if self.selenium_manager:
-            self.selenium_manager.close()
-        if self.driver:
-            try:
-                self.driver.quit()
-                print("Драйвер парсера закрыт успешно")
-            except Exception as e:
-                print(f"Ошибка закрытия парсера драйвера: {e}")
-        else:
-            print("Драйвер не инициализирован, закрытие не требуется")
