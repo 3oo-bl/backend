@@ -67,7 +67,8 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
             if not selenium_manager.navigate_to_url(full_url):
                 logger.warning(f"Не удалось загрузить {full_url} на попытке {attempt + 1}")
                 if attempt < 2:
-                    time.sleep(2)
+                    selenium_manager.close()
+                    selenium_manager.create_driver_with_logging()
                     continue
                 return "Не удалось загрузить данные о товаре"
             json_content = selenium_manager.get_json_via_logs()
