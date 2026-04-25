@@ -1,6 +1,9 @@
+using Grpc.Core;
+using WbGrpc;
+
 namespace ProfitableViewApp.Interfaces;
 
 public interface ISearcher
 {
-    Task<string> Search(string query, int targetValue);
+    IAsyncEnumerable<SearchResponse> Search(string query, int targetValue);
 }

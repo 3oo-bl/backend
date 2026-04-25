@@ -22,18 +22,40 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
         with self._semaphore:
             selenium_manager = SeleniumManager()
             links_parser = OzonLinksParser(selenium_manager)
+
             try:
                 selenium_manager.create_driver_with_logging()
+
                 links = links_parser.parse_links(request)
-                if links.status == 1:
-                    return searchers_pb2.SearchResponse(
-                        status=1,
-                        raw_json=json.dumps(self.parse_products(links.raw_json.split("\n"), selenium_manager))
+
+                if links.status != 1:
+                    yield searchers_pb2.SearchResponse(
+                        status=0,
+                        raw_json=links.raw_json
                     )
-                return links
+                    return
+
+                for url in links.raw_json.split("\n"):
+                    article = self.extract_article_from_url(url)
+                    if not article:
+                        continue
+
+                    data = self.wait_product_info(article, selenium_manager)
+
+                    if data:
+                        yield searchers_pb2.SearchResponse(
+                            status=1,
+                            raw_json=json.dumps(data)
+                        )
+
             except Exception as e:
-                logger.error(f"Ошибка в Search: {e}", exc_info=True)
-                return searchers_pb2.SearchResponse(status=0, raw_json="Произошла ошибка при обработке запроса")
+                logger.error(f"Ошибка: {e}", exc_info=True)
+
+                yield searchers_pb2.SearchResponse(
+                    status=0,
+                    raw_json="Ошибка обработки"
+                )
+
             finally:
                 selenium_manager.close()
 

@@ -1,3 +1,4 @@
+using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp.Interfaces;
@@ -23,7 +24,7 @@ public class OzonGrpcClient : IGrpcClient
         _client = new OzonParser.OzonParserClient(channel);
     }
 
-    public async Task<string> SearchAsync(string itemName, int quantity)
+    public IAsyncEnumerable<SearchResponse> SearchAsync(string itemName, int quantity)
     {
         Console.WriteLine("Парсинг озоза начался");
         var request = new OzonSearchRequest
@@ -31,10 +32,11 @@ public class OzonGrpcClient : IGrpcClient
             ItemName = itemName,
             Quantity = quantity
         };
-        WbGrpc.SearchResponse response;
+        IAsyncEnumerable<SearchResponse> response;
         try
         {
-            response = await _client.SearchAsync(request);
+            var call = _client.Search(request);
+            response = call.ResponseStream.ReadAllAsync();
         }
         catch (Exception e)
         {
@@ -42,6 +44,6 @@ public class OzonGrpcClient : IGrpcClient
             throw;
         }
 
-        return response.RawJson;
+        return response;
     }
 }

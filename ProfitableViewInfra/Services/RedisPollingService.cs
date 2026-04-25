@@ -54,6 +54,7 @@ public class RedisPollingService : IPollingService
             _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её обновить!");
         else
         {
+            _logger.LogInformation($"Джоба {token} завершена!");
             var result = new JobResult
             {
                 Token = token,
@@ -70,6 +71,7 @@ public class RedisPollingService : IPollingService
             _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её обновить!");
         else
         {
+            _logger.LogInformation($"Джоба {token} завершена с ошибкой {ex.Message}!");
             var result = new JobResult
             {
                 Token = token,

@@ -1,10 +1,12 @@
 using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Interfaces;
 using ProfitableViewInfra.Searchers;
+using WbGrpc;
 
 namespace ProfitableViewDataInfra.Parsers;
 
@@ -34,21 +36,30 @@ public class OzonMarketplaceParser : IMarketplaceParser
     {
         if (quantity is null)
             quantity = 20;
-        var response = await _searcher.Search(itemName, (int)quantity);
-        return ParseResponse(response, quantity);
+        var response = _searcher.Search(itemName, (int)quantity);
+        return await ParseResponse(response, quantity);
     }
     
-    internal List<ProductDTO> ParseResponse(string response, int? quantity = 20)
+    internal async Task<List<ProductDTO>> ParseResponse(IAsyncEnumerable<SearchResponse> rawData, int? quantity = 20)
     {
-        var clearedData = JsonSerializer.Deserialize<JsonElement>(response);
         var productsList = new List<ProductDTO>();
-        var i = 0;
+        _logger.LogInformation("Парсинг ответа...");
         
-        foreach (var product in clearedData.EnumerateArray())
+        await foreach (var response in rawData)
         {
-            productsList.Add(ParseProduct(product));
-            ++i;
-            if (i >= quantity)
+            if (response.Status != 1)
+                continue; // #TODO здесь нужна обработка ошибок парсинга
+            var product = JsonSerializer.Deserialize<JsonElement>(response.RawJson);
+            try
+            {
+                productsList.Add(ParseProduct(product));
+            }
+            catch
+            {
+                continue;
+                //#TODO Убрать это, переделать на Result/более умную обработку данных о товаре (падало на sticky missing)!!
+            }
+            if (productsList.Count >= quantity)
                 break;
         }
 

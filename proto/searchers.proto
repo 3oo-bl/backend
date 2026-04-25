@@ -3,11 +3,11 @@ syntax = "proto3";
 option csharp_namespace = "WbGrpc";
 
 service WbParser {
-  rpc Search (SearchRequest) returns (SearchResponse);
+  rpc Search (SearchRequest) returns (stream SearchResponse);
 }
 
 service OzonParser {
-  rpc Search (OzonSearchRequest) returns (SearchResponse);
+  rpc Search (OzonSearchRequest) returns (stream SearchResponse);
 }
 
 message OzonSearchRequest {

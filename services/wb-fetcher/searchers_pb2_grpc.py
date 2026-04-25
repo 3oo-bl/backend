@@ -34,7 +34,7 @@ class WbParserStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Search = channel.unary_unary(
+        self.Search = channel.unary_stream(
                 '/WbParser/Search',
                 request_serializer=searchers__pb2.SearchRequest.SerializeToString,
                 response_deserializer=searchers__pb2.SearchResponse.FromString,
@@ -53,7 +53,7 @@ class WbParserServicer(object):
 
 def add_WbParserServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Search': grpc.unary_unary_rpc_method_handler(
+            'Search': grpc.unary_stream_rpc_method_handler(
                     servicer.Search,
                     request_deserializer=searchers__pb2.SearchRequest.FromString,
                     response_serializer=searchers__pb2.SearchResponse.SerializeToString,
@@ -80,7 +80,7 @@ class WbParser(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
             '/WbParser/Search',
@@ -106,7 +106,7 @@ class OzonParserStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.Search = channel.unary_unary(
+        self.Search = channel.unary_stream(
                 '/OzonParser/Search',
                 request_serializer=searchers__pb2.OzonSearchRequest.SerializeToString,
                 response_deserializer=searchers__pb2.SearchResponse.FromString,
@@ -125,7 +125,7 @@ class OzonParserServicer(object):
 
 def add_OzonParserServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'Search': grpc.unary_unary_rpc_method_handler(
+            'Search': grpc.unary_stream_rpc_method_handler(
                     servicer.Search,
                     request_deserializer=searchers__pb2.OzonSearchRequest.FromString,
                     response_serializer=searchers__pb2.SearchResponse.SerializeToString,
@@ -152,7 +152,7 @@ class OzonParser(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
             '/OzonParser/Search',

@@ -81,10 +81,12 @@ class WBParserService(searchers_pb2_grpc.WbParserServicer):
                     continue
 
                 data = resp.json()
-                return searchers_pb2.SearchResponse(status = 1, raw_json = json.dumps(data))
+                yield searchers_pb2.SearchResponse(status = 1, raw_json = json.dumps(data))
+                return
 
             except Exception as e:
                 print("Exception:", e)
                 self._sleep(attempt)
 
-        return searchers_pb2.SearchResponse(status = 0, raw_json = "")
+        yield searchers_pb2.SearchResponse(status = 0, raw_json = "")
+        return

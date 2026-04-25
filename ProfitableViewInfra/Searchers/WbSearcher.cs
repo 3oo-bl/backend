@@ -1,5 +1,6 @@
 using ProfitableViewApp.Interfaces;
 using ProfitableViewDataInfra.gRPC;
+using WbGrpc;
 
 namespace ProfitableViewDataInfra.Searchers;
 
@@ -12,8 +13,8 @@ public class WbSearcher : ISearcher
         _client = client;
     }
     
-    public async Task<string> Search(string query, int page)
+    public IAsyncEnumerable<SearchResponse> Search(string query, int page)
     {
-        return await _client.SearchAsync(query, page);
+        return _client.SearchAsync(query, page);
     }
 }

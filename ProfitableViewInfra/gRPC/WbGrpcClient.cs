@@ -1,5 +1,6 @@
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using Grpc.Core;
 using Grpc.Net.Client;
 using ProfitableViewApp.Interfaces;
 using WbGrpc;
@@ -24,7 +25,7 @@ public class WbGrpcClient : IGrpcClient
         _client = new WbParser.WbParserClient(channel);
     }
 
-    public async Task<string> SearchAsync(string itemName, int page)
+    public IAsyncEnumerable<SearchResponse> SearchAsync(string itemName, int page)
     {
         Console.WriteLine("Парсинг вб начался");
         var request = new SearchRequest
@@ -32,8 +33,7 @@ public class WbGrpcClient : IGrpcClient
             ItemName = itemName,
             Page = page
         };
-        var response = await _client.SearchAsync(request);
-
-        return response.RawJson;
+        var call = _client.Search(request);
+        return call.ResponseStream.ReadAllAsync();
     }
 }

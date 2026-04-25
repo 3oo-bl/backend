@@ -4,5 +4,5 @@ namespace ProfitableViewApp.Interfaces;
 
 public interface IGrpcClient
 {
-    Task<string> SearchAsync(string itemName, int page);
+    IAsyncEnumerable<SearchResponse> SearchAsync(string itemName, int page);
 }

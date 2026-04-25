@@ -1,5 +1,6 @@
 using ProfitableViewApp.Interfaces;
 using ProfitableViewDataInfra.gRPC;
+using WbGrpc;
 
 namespace ProfitableViewInfra.Searchers;
 
@@ -12,8 +13,8 @@ public class OzonSearcher : ISearcher
         _client = client;
     }
 
-    public async Task<string> Search(string query, int targetValue)
+    public IAsyncEnumerable<SearchResponse> Search(string query, int targetValue)
     {
-        return await _client.SearchAsync(query, targetValue);
+        return _client.SearchAsync(query, targetValue);
     }
 }

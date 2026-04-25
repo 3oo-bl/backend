@@ -8,6 +8,7 @@ using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Interfaces;
 using ProfitableViewDataInfra.Searchers;
 using ProfitableViewDataInfra.Utils;
+using WbGrpc;
 
 namespace ProfitableViewDataInfra.Parsers;
 
@@ -37,14 +38,12 @@ public class WbMarketplaceParser : IMarketplaceParser
         var pages = (quantity + 99) / 100;
         for (var i = 1; i <= pages; ++i)
         {
-            var response = await _searcher.Search(itemName, i);
-            if (string.IsNullOrEmpty(response))
-                continue;
+            var response = _searcher.Search(itemName, i);
             List<ProductDTO> parsed;
             if (i * 100 > quantity)
-                parsed = ParseResponse(response, quantity % 100).Result;
+                parsed = await ParseResponse(response, quantity % 100);
             else
-                parsed = ParseResponse(response).Result;
+                parsed = await ParseResponse(response);
             lock (result)
                 result.AddRange(parsed);
         }
@@ -52,28 +51,32 @@ public class WbMarketplaceParser : IMarketplaceParser
         return result;
     }
 
-    internal async Task<List<ProductDTO>> ParseResponse(string response, int? quantity = 100)
+    internal async Task<List<ProductDTO>> ParseResponse(IAsyncEnumerable<SearchResponse> rawData, int? quantity = 100)
     {
-        var clearedData = JsonSerializer.Deserialize<WbProductWrapper>(response);
         var productsList = new List<ProductDTO>();
-        var i = 0;
 
-        foreach (var product in clearedData.Products)
+        await foreach (var response in rawData)
         {
-            productsList.Add(ParseProduct(product).Result);
-            ++i;
-            if (i >= quantity)
-                break;
+            if (response.Status != 1)
+                continue; // #TODO здесь нужна обработка ошибок парсинга
+            var productWrapper = JsonSerializer.Deserialize<WbProductWrapper>(response.RawJson)!;
+            foreach (var product in productWrapper.Products)
+            {
+                productsList.Add(ParseProduct(product));
+                if (productsList.Count >= quantity)
+                    break;
+            }
         }
+        _logger.LogInformation($"Parsed {productsList.Count} products");
 
         return productsList;
     }
 
-    internal async Task<ProductDTO> ParseProduct(WbProductDTO rawProduct)
+    internal ProductDTO ParseProduct(WbProductDTO rawProduct)
     {
         var priceInfo = rawProduct.Sizes[0].WbPrice;
         var id = rawProduct.Id;
-        var productDTO = new ProductDTO
+        var productDto = new ProductDTO
         {
             Id = id.ToString(),
             Name = rawProduct.Name,
@@ -91,6 +94,6 @@ public class WbMarketplaceParser : IMarketplaceParser
             Link = $"https://www.wildberries.ru/catalog/{rawProduct.Id}/detail.aspx",
             ImageLink = $"https://ekt-basket-cdn-06bl.geobasket.ru/vol{id / 100000}/part{id / 1000}/{id}/images/big/1.webp"
         };
-        return productDTO;
+        return productDto;
     }
 }

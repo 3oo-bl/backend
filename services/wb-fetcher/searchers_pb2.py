@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fsearchers.proto\"7\n\x11OzonSearchRequest\x12\x10\n\x08itemName\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"/\n\rSearchRequest\x12\x10\n\x08itemName\x18\x01 \x01(\t\x12\x0c\n\x04page\x18\x02 \x01(\x05\"2\n\x0eSearchResponse\x12\x0e\n\x06status\x18\x01 \x01(\x05\x12\x10\n\x08raw_json\x18\x02 \x01(\t25\n\x08WbParser\x12)\n\x06Search\x12\x0e.SearchRequest\x1a\x0f.SearchResponse2;\n\nOzonParser\x12-\n\x06Search\x12\x12.OzonSearchRequest\x1a\x0f.SearchResponseB\t\xaa\x02\x06WbGrpcb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fsearchers.proto\"7\n\x11OzonSearchRequest\x12\x10\n\x08itemName\x18\x01 \x01(\t\x12\x10\n\x08quantity\x18\x02 \x01(\x05\"/\n\rSearchRequest\x12\x10\n\x08itemName\x18\x01 \x01(\t\x12\x0c\n\x04page\x18\x02 \x01(\x05\"2\n\x0eSearchResponse\x12\x0e\n\x06status\x18\x01 \x01(\x05\x12\x10\n\x08raw_json\x18\x02 \x01(\t27\n\x08WbParser\x12+\n\x06Search\x12\x0e.SearchRequest\x1a\x0f.SearchResponse0\x01\x32=\n\nOzonParser\x12/\n\x06Search\x12\x12.OzonSearchRequest\x1a\x0f.SearchResponse0\x01\x42\t\xaa\x02\x06WbGrpcb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,7 +39,7 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SEARCHRESPONSE']._serialized_start=125
   _globals['_SEARCHRESPONSE']._serialized_end=175
   _globals['_WBPARSER']._serialized_start=177
-  _globals['_WBPARSER']._serialized_end=230
-  _globals['_OZONPARSER']._serialized_start=232
-  _globals['_OZONPARSER']._serialized_end=291
+  _globals['_WBPARSER']._serialized_end=232
+  _globals['_OZONPARSER']._serialized_start=234
+  _globals['_OZONPARSER']._serialized_end=295
 # @@protoc_insertion_point(module_scope)
