@@ -33,6 +33,9 @@ public class ParseMarketService
 
     public string? ParseProductList(RequestStartDTO request)
     {
+        var token = GetHash(request.Item);
+        if (!_pollingService.AddJob(token))
+            return token;
         var tasks = new List<Task<List<ProductDTO>>>();
         if (request.Markets is null)
         {
@@ -53,9 +56,6 @@ public class ParseMarketService
             _logger.LogWarning("Нет подходящих под запрос парсеров или список магазинов пуст.");
             return null;
         }
-
-        var token = GetHash(request.Item);
-        _pollingService.AddJob(token);
         _ = Task.Run(() => RunJobAsync(token, tasks));
         return token;
     }
@@ -71,6 +71,7 @@ public class ParseMarketService
     {
         try
         {
+            _logger.LogInformation("Парсинг запущен");
             var result = await Task.WhenAll(tasks);
             _pollingService.FinishJob(token, result.SelectMany(x => x).ToList());
         }

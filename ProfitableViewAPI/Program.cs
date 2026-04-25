@@ -12,6 +12,7 @@ using ProfitableViewDataInfra.gRPC;
 using ProfitableViewDataInfra.Searchers;
 using ProfitableViewInfra.Searchers;
 using ProfitableViewInfra.Services;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +79,8 @@ var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 var cs = builder.Configuration.GetConnectionString("DefaultConnection");
 Console.WriteLine(cs);
 
+var redisConnStr =  builder.Configuration["Redis:ConnectionString"]!;
+
 builder.Services.AddSingleton<WbGrpcClient>();
 builder.Services.AddSingleton<OzonGrpcClient>();
 builder.Services.AddScoped<AuthentificationService>();
@@ -85,11 +88,13 @@ builder.Services.AddDbContext<DBContext>(options => options.UseNpgsql(connection
 builder.Services.AddSingleton<PasswordHasher<string>>();
 builder.Services.AddScoped<AuthTokenService>();
 builder.Services.AddScoped<ILogger, Logger<AuthentificationService>>();
-builder.Services.AddSingleton<IPollingService, InMemoryPollingService>();
+builder.Services.AddSingleton<IPollingService, RedisPollingService>();
 builder.Services.AddScoped<ParseMarketService>();
 builder.Services.AddScoped<WbSearcher>();
 builder.Services.AddScoped<OzonSearcher>();
 builder.Services.AddScoped<HttpClient>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(redisConnStr));
 builder.Services.BindClientFactory();
 builder.Services.BindParsers();
 builder.Services.BindInfrastructureServices();

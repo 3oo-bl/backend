@@ -3,7 +3,7 @@ using ProfitableViewApp;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Interfaces;
 
-namespace ProfitableViewInfra;
+namespace ProfitableViewInfra.Services;
 
 public class InMemoryPollingService : IPollingService
 {
@@ -41,7 +41,7 @@ public class InMemoryPollingService : IPollingService
     public void FinishJob(string token, List<ProductDTO> result)
     {
         if (!_jobs.ContainsKey(token))
-            _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её проверить!");
+            _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её обновить!");
         else
         {
             _jobs[token].State = ParsingJobStates.Completed;
@@ -52,7 +52,7 @@ public class InMemoryPollingService : IPollingService
     public void FailJob(string token, Exception ex)
     {
         if (!_jobs.ContainsKey(token))
-            _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её проверить!");
+            _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её обновить!");
         else
         {
             _logger.LogError($"Исключение! {ex.Message}");
@@ -63,7 +63,7 @@ public class InMemoryPollingService : IPollingService
 
     public List<ProductDTO>? GetProductList(string token, RequestResultsDTO request)
     {
-        var jobResult = GetJobResult(token);
+        var jobResult = _jobs[token];
         if (jobResult.State is ParsingJobStates.Failed)
             return null; // #TODO Exception не дремлет, он лежит в jobResult :(
         var products = jobResult.Products!.Skip(request.Skip)
@@ -80,10 +80,5 @@ public class InMemoryPollingService : IPollingService
                 products = products.OrderByDescending(x => x.Cost);
         }
         return products.ToList();
-    }
-
-    public JobResult GetJobResult(string token)
-    {
-        return _jobs[token];
     }
 }

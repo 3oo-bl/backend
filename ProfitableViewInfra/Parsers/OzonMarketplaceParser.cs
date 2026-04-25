@@ -75,7 +75,7 @@ public class OzonMarketplaceParser : IMarketplaceParser
             Rating = rating.score,
             Reviews = rating.reviewsCount,
             Link = $"https://www.ozon.ru/product/{id}",
-            ImageLink = context.WebGallery.GetProperty("coverImage").GetString(),
+            ImageLink = context.WebGallery.GetProperty("coverImage").GetString()!,
         };
     }
 
