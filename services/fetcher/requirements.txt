@@ -1,0 +1,5 @@
+grpcio
+grpcio-tools
+requests
+selenium
+selenium_stealth

@@ -13,3 +13,5 @@
 
 *.env
 *secrets/*
+
+*services/wb-fetcher/__pycache__/*

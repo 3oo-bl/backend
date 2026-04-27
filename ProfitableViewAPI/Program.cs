@@ -1,9 +1,18 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using ProfitableViewApp.Interfaces;
 using ProfitableViewApp.Services;
 using ProfitableViewCore;
+using ProfitableViewInfra;
+using ProfitableViewDataInfra.gRPC;
+using ProfitableViewDataInfra.Searchers;
+using ProfitableViewInfra.Searchers;
+using ProfitableViewInfra.Services;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,8 +44,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-if (string.IsNullOrEmpty(builder.Configuration["jwt:Key"]))
-    builder.Configuration["jwt:Key"] = File.ReadAllText("/run/secrets/jwt_key");
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddEnvironmentVariables()
+    .AddKeyPerFile("/run/secrets", optional: true);
+
+// if (string.IsNullOrEmpty(builder.Configuration["jwt:Key"]))
+//     builder.Configuration["jwt:Key"] = File.ReadAllText("/run/secrets/jwt_key");
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -65,7 +79,30 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddScoped<AuthenticationService>();
+var connection = builder.Configuration.GetConnectionString("DefaultConnection");
+
+var cs = builder.Configuration.GetConnectionString("DefaultConnection");
+Console.WriteLine(cs);
+
+var redisConnStr =  builder.Configuration["Redis:ConnectionString"]!;
+
+builder.Services.AddSingleton<WbGrpcClient>();
+builder.Services.AddSingleton<OzonGrpcClient>();
+builder.Services.AddScoped<AuthentificationService>();
+builder.Services.AddDbContext<DBContext>(options => options.UseNpgsql(connection));
+builder.Services.AddSingleton<PasswordHasher<string>>();
+builder.Services.AddScoped<AuthTokenService>();
+builder.Services.AddScoped<ILogger, Logger<AuthentificationService>>();
+builder.Services.AddSingleton<IPollingService, RedisPollingService>();
+builder.Services.AddScoped<ParseMarketService>();
+builder.Services.AddScoped<WbSearcher>();
+builder.Services.AddScoped<OzonSearcher>();
+builder.Services.AddScoped<HttpClient>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(
+    ConnectionMultiplexer.Connect(redisConnStr));
+builder.Services.BindClientFactory();
+builder.Services.BindParsers();
+builder.Services.BindInfrastructureServices();
 
 var app = builder.Build();
 
