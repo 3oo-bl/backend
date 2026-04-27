@@ -1,3 +1,4 @@
+using System.Net.Security;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Logging;
@@ -15,10 +16,14 @@ public class OzonGrpcClient : IGrpcClient
         var handler = new SocketsHttpHandler
         {
             UseProxy = false,
+            SslOptions = new SslClientAuthenticationOptions
+            {
+                RemoteCertificateValidationCallback = (_, _, _, _) => true
+            }
         };
 
         var channel = GrpcChannel.ForAddress(
-            "https://127.0.0.1:50051",
+            "https://grpc_searcher:50051",
             new GrpcChannelOptions { HttpHandler = handler }
         );
         _client = new OzonParser.OzonParserClient(channel);

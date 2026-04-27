@@ -60,14 +60,14 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
                 selenium_manager.close()
 
     def parse_products(self, products, selenium_manager):
-        print(f"Collected product links: {len(products)}")
+        logger.warning(f"Collected product links: {len(products)}")
         articles = set()
         for url in products:
             article = self.extract_article_from_url(url)
             if article:
                 articles.add(article)
 
-        print(f"Прочитано артикулов: {len(articles)}")
+        logger.warning(f"Прочитано артикулов: {len(articles)}")
         results = []
         for article in articles:
             data = self.wait_product_info(article, selenium_manager)
@@ -106,7 +106,7 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
     def collect_product_info(self, json_content):
         try:
             data = json.loads(json_content)
-            print("JSON в обработке")
+            logger.warning("JSON в обработке")
             return data.get("widgetStates", {})
         except Exception as e:
             logger.error(f"parse error: {e}")

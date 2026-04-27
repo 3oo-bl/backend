@@ -5,10 +5,56 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-    command: ["--fake"]
+    depends_on:
+      - pg
+      - redis
+      - grpc_searcher
     secrets:
-      - jwt_key
+      - jwt__key
+      - ConnectionStrings__DefaultConnection
+      - Redis__ConnectionString
+
+  pg:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: /run/secrets/pg_user
+      POSTGRES_PASSWORD: /run/secrets/pg_password
+      POSTGRES_DB: app
+    secrets:
+      - pg_user
+      - pg_password
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  grpc_searcher:
+    shm_size: '2gb'
+    build:
+      context: ./services/fetcher
+      dockerfile: Dockerfile
+    ports:
+      - "50051:50051"
+    secrets:
+      - server_key
+      - server_crt
     
 secrets:
-  jwt_key:
+  jwt__key:
     file: ./secrets/jwt_key.txt
+  ConnectionStrings__DefaultConnection:
+    file: ./secrets/ConnectionStrings_DefaultConnection.txt
+  Redis__ConnectionString:
+    file: ./secrets/Redis_ConnectionString.txt
+  pg_user:
+    file: ./secrets/pg_user.txt
+  pg_password:
+    file: ./secrets/pg_password.txt
+  server_key:
+    file: ./secrets/server.key
+  server_crt:
+    file: secrets/server.crt

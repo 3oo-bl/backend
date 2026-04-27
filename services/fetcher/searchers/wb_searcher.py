@@ -1,4 +1,5 @@
 import json
+import logging
 
 import requests
 import time
@@ -7,6 +8,7 @@ import random
 import searchers_pb2
 import searchers_pb2_grpc
 
+logger = logging.getLogger(__name__)
 
 class WBParserService(searchers_pb2_grpc.WbParserServicer):
     def __init__(self):
@@ -40,11 +42,11 @@ class WBParserService(searchers_pb2_grpc.WbParserServicer):
         else:
             wait = min(30, (2 ** attempt) + random.uniform(1, 5))
 
-        print(f"429 → sleep {wait:.1f}s")
+        logger.warning(f"429 → sleep {wait:.1f}s")
         time.sleep(wait)
 
     def Search(self, request, context):
-        print(f"Received search request: {request.itemName}")
+        logger.warning(f"Received search request: {request.itemName}")
         retries = 5
         page = request.page
         query = request.itemName

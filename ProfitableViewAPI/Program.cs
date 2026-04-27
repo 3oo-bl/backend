@@ -44,8 +44,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-if (string.IsNullOrEmpty(builder.Configuration["jwt:Key"]))
-    builder.Configuration["jwt:Key"] = File.ReadAllText("/run/secrets/jwt_key");
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddEnvironmentVariables()
+    .AddKeyPerFile("/run/secrets", optional: true);
+
+// if (string.IsNullOrEmpty(builder.Configuration["jwt:Key"]))
+//     builder.Configuration["jwt:Key"] = File.ReadAllText("/run/secrets/jwt_key");
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

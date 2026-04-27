@@ -28,8 +28,8 @@ class SeleniumManager:
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-blink-features=AutomationControlled")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--blink-settings=imagesEnabled=false")
-        chrome_options.add_argument("--disable-dev-shm-usage")
+        # chrome_options.add_argument("--blink-settings=imagesEnabled=false")
+        # chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
         chrome_options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
@@ -49,7 +49,7 @@ class SeleniumManager:
             driver.execute_cdp_cmd("Network.setBlockedURLs", {
                 "urls": ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.css", "*.woff2"]
             })
-            driver.execute_cdp_cmd("Network.enable", {})
+            # driver.execute_cdp_cmd("Network.enable", {})
             
             stealth(driver,
                    languages=["ru-RU", "ru"],
@@ -80,14 +80,17 @@ class SeleniumManager:
             return False
         
         try:
-            logger.info(f"Переход к URL: {url}")
+            logger.warning(f"Переход к URL: {url}")
             self.driver.get(url)
+            logger.warning("Страница загружена, проверяем на антибот")
             self.wait_for_antibot()
             return True
         except TimeoutException:
             logger.warning(f"Таймаут при переходе: {url}")
+            return False
         except WebDriverException as e:
             logger.error(f"Ошибка при навигации к URL {url}: {e}")
+            return False
 
     def wait_for_antibot(self, max_wait_time = 120):
         start_time = time.time()
@@ -99,6 +102,7 @@ class SeleniumManager:
                     if attempts < max_attempts:
                         logger.warning("Обнаружен антибот элемент, обновляем страницу")
                         attempts += 1
+                        self.driver.refresh()
                         time.sleep(2)
                         continue
                     else:
@@ -119,47 +123,18 @@ class SeleniumManager:
         if not self.driver:
             return True
         try:
+            text = self.driver.execute_script(
+                "return document.body ? document.body.innerText.toLowerCase() : '';"
+            )
             blocked_flags = [
                 "cloudflare", "checking your browser", "enable javascript",
-                "access denied", "blocked", "ddos-guard", "проверка браузера",
+                "access denied", "ddos-guard", "проверка браузера",
                 "доступ ограничен", "access restricted"
             ]
-            page_source = self.driver.page_source.lower()
-
-            for flag in blocked_flags:
-                if flag in page_source:
-                    return True
-            return False
+            return any(flag in text for flag in blocked_flags)
         except WebDriverException as e:
             logger.error(f"Ошибка при проверке блокировки: {e}")
             return True
-    
-    def _extract_json_from_html(self, html_content: str) -> Optional[str]:
-        try:
-            import re
-            
-            pre_pattern = r'<pre[^>]*>(.*?)</pre>'
-            pre_match = re.search(pre_pattern, html_content, re.DOTALL | re.IGNORECASE)
-            
-            if pre_match:
-                json_content = pre_match.group(1).strip()
-                logger.debug("JSON найден в <pre> теге")
-                return json_content
-            
-
-            first_brace = html_content.find('{')
-            last_brace = html_content.rfind('}')
-            
-            if first_brace != -1 and last_brace != -1 and first_brace < last_brace:
-                json_content = html_content[first_brace:last_brace + 1]
-                logger.debug("JSON найден по поиску скобок")
-                return json_content
-            
-            return None
-            
-        except Exception as e:
-            logger.error(f"Ошибка извлечения JSON из HTML: {e}")
-            return None
         
     def close(self):
         if self.driver:
@@ -176,7 +151,7 @@ class SeleniumManager:
         try:
             logs = self.driver.get_log("performance")
 
-            for log in logs:
+            for log in reversed(logs):
                 message = json.loads(log["message"])["message"]
                 if message.get("method") != "Network.responseReceived":
                     continue
