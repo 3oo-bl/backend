@@ -81,9 +81,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 
-var cs = builder.Configuration.GetConnectionString("DefaultConnection");
-Console.WriteLine(cs);
-
 var redisConnStr =  builder.Configuration["Redis:ConnectionString"]!;
 
 builder.Services.AddSingleton<WbGrpcClient>();
@@ -93,14 +90,13 @@ builder.Services.AddDbContext<DBContext>(options => options.UseNpgsql(connection
 builder.Services.AddSingleton<PasswordHasher<string>>();
 builder.Services.AddScoped<AuthTokenService>();
 builder.Services.AddScoped<ILogger, Logger<AuthentificationService>>();
-builder.Services.AddSingleton<IPollingService, RedisPollingService>();
+builder.Services.AddScoped<IPollingService, RedisPollingService>();
 builder.Services.AddScoped<ParseMarketService>();
 builder.Services.AddScoped<WbSearcher>();
 builder.Services.AddScoped<OzonSearcher>();
 builder.Services.AddScoped<HttpClient>();
 builder.Services.AddSingleton<IConnectionMultiplexer>(
-    ConnectionMultiplexer.Connect(redisConnStr));
-builder.Services.BindClientFactory();
+    ConnectionMultiplexer.Connect(redisConnStr + ",abortConnect=false"));
 builder.Services.BindParsers();
 builder.Services.BindInfrastructureServices();
 

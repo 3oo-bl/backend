@@ -61,7 +61,7 @@ public class InMemoryPollingService : IPollingService
         }
     }
 
-    public List<ProductDTO>? GetProductList(string token, RequestResultsDTO request)
+    public List<ProductDTO>? GetOrderedProductList(string token, string? id, RequestResultsDTO request)
     {
         var jobResult = _jobs[token];
         if (jobResult.State is ParsingJobStates.Failed)

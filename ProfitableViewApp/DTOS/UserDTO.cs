@@ -13,5 +13,5 @@ public class UserDTO
     public string Password { get; set; }
 
     public int PreferencesId { get; set; }
-    public PrefsWeigthsDTO Preferences { get; set; }
+    public PrefsWeightsDTO Preferences { get; set; }
 }

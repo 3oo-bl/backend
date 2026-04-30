@@ -19,14 +19,14 @@ public static class EndpointsExtensions
             0, new()
             {
                 Name = "Антон", Email = "1", Password = "1",
-                Preferences = new() { Price = 0.5f, Delivery = 0.1f, SellerRating = 0.4f }
+                Preferences = new() { Price = 0.5f, Delivery = 0.1f, Rating = 0.4f }
             }
         },
         {
             1, new()
             {
                 Name = "Геннадий", Email = "oleg@pochta.com", Password = "11111",
-                Preferences = new() { Price = 0.5f, Delivery = 0.1f, SellerRating = 0.4f }
+                Preferences = new() { Price = 0.5f, Delivery = 0.1f, Rating = 0.4f }
             }
         },
     };
@@ -55,7 +55,7 @@ public static class EndpointsExtensions
     public static void MapFakeEndpoints(this WebApplication app, ILogger logger)
     {
         app.MapPatch("/users",
-            [Authorize] (HttpContext context, PrefsWeigthsDTO newPreferences) =>
+            [Authorize] (HttpContext context, PrefsWeightsDTO newPreferences) =>
         {
             var userId = context.User.FindFirst(ClaimTypes.PrimarySid).Value;
             return UpdatePreferencies(userId, newPreferences, logger);
@@ -89,7 +89,7 @@ public static class EndpointsExtensions
         }).WithOpenApi();
     }
 
-    private static HttpStatusCode UpdatePreferencies(string login, PrefsWeigthsDTO newPreferences, ILogger logger)
+    private static HttpStatusCode UpdatePreferencies(string login, PrefsWeightsDTO newPreferences, ILogger logger)
     {
         var user = _fakeDB.FirstOrDefault(x => x.Value.Id.ToString() == login).Value;
         user.Preferences = newPreferences;

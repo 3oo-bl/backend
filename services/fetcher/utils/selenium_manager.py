@@ -38,16 +38,22 @@ class SeleniumManager:
         
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--disable-plugins")
+
+        chrome_options.add_argument(
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/124.0.0.0 Safari/537.36"
+        )
         
         if self.headless:
-            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--headless=new")
         
         chrome_options.add_argument("--window-size=1920,1080")
         
         try:
             driver = webdriver.Chrome(options=chrome_options)
             driver.execute_cdp_cmd("Network.setBlockedURLs", {
-                "urls": ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.css", "*.woff2"]
+                "urls": ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.woff2"]
             })
             # driver.execute_cdp_cmd("Network.enable", {})
             

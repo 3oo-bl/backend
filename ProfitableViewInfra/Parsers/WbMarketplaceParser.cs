@@ -1,13 +1,8 @@
-using System.Net;
-using System.Runtime.CompilerServices;
-using System.Text.Encodings.Web;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using ProfitableViewApp.DTOS;
 using ProfitableViewApp.Interfaces;
 using ProfitableViewDataInfra.Searchers;
-using ProfitableViewDataInfra.Utils;
 using WbGrpc;
 
 namespace ProfitableViewDataInfra.Parsers;

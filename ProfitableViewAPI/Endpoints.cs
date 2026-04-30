@@ -18,7 +18,7 @@ public static class Endpoints
         app.MapPost("/auth/login", (string email, string password, AuthentificationService authService)
             => authService.Login(email, password)).WithOpenApi();
         app.MapPatch("/users", [Authorize] (HttpContext context, UpdatePrefsService updatePrefsService,
-            PrefsWeigthsDTO newPreferences) =>
+            PrefsWeightsDTO newPreferences) =>
         {
             var id = context.User.FindFirst(ClaimTypes.PrimarySid)?.Value;
             return updatePrefsService.UpdatePrefs(int.Parse(id!), newPreferences);
@@ -26,7 +26,7 @@ public static class Endpoints
         app.MapPost("/goods/search",
             [Authorize]([FromBody] RequestStartDTO requestStartDto, ParseMarketService parseMarketService) =>
             parseMarketService.ParseProductList(requestStartDto));
-        app.MapGet("/goods/search/{jobId}", [Authorize] (string jobId,
+        app.MapGet("/goods/search/{jobId}", [Authorize] (HttpContext context, string jobId,
             [AsParameters] RequestResultsDTO requestResultsDto, IPollingService pollingService) =>
         {
             var status = pollingService.CheckJobStatus(jobId);
@@ -34,7 +34,8 @@ public static class Endpoints
                 return Results.BadRequest();
             if (status is ParsingJobStates.Pending)
                 return Results.Accepted();
-            var result = pollingService.GetProductList(jobId, requestResultsDto);
+            var id = context.User.FindFirst(ClaimTypes.PrimarySid)?.Value;
+            var result = pollingService.GetOrderedProductList(jobId, id, requestResultsDto);
             if (result is not null)
                 return Results.Ok(result);
             return Results.Problem();

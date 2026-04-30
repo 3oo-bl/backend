@@ -8,8 +8,6 @@ public sealed class DBContext : DbContext
     public DbSet<UserDTO> Users { get; set; } = null!;
     public DBContext(DbContextOptions<DBContext> options) : base(options)
     {
-        Database.Migrate();
-        Console.WriteLine("DB created");
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

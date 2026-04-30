@@ -11,11 +11,14 @@ public class RedisPollingService : IPollingService
 {
     private readonly IDatabase _db;
     private readonly ILogger<RedisPollingService> _logger;
+    private readonly ProductSortingService _productSortingService;
 
-    public RedisPollingService(ILogger<RedisPollingService> logger, IConnectionMultiplexer redis)
+    public RedisPollingService(ILogger<RedisPollingService> logger, IConnectionMultiplexer redis,
+        ProductSortingService productSortingService)
     {
         _logger = logger;
         _db = redis.GetDatabase();
+        _productSortingService = productSortingService;
     }
     
     public bool AddJob(string token)
@@ -82,24 +85,28 @@ public class RedisPollingService : IPollingService
         }
     }
 
-    public List<ProductDTO>? GetProductList(string token, RequestResultsDTO request)
+    public List<ProductDTO>? GetOrderedProductList(string token, string? id, RequestResultsDTO request)
     {
         var jobResult = JsonSerializer.Deserialize<JobResult>(_db.StringGet(token)!)!;
         if (jobResult.State is ParsingJobStates.Failed)
             return null; // #TODO Exception не дремлет, он лежит в jobResult :(
-        var products = jobResult.Products!.Skip(request.Skip)
+        var sortedProducts = _productSortingService
+            .SortProductsByUserPreferences(jobResult.Products!, id)
+            ?.Skip(request.Skip)
             .Take(request.Take);
+        if (sortedProducts is null)
+            return null;
         if (request.MinPrice is not null)
-            products = products.Where(x => x.Cost > request.MinPrice.Value);
+            sortedProducts = sortedProducts.Where(x => x.Cost > request.MinPrice.Value);
         if (request.MaxPrice is not null)
-            products = products.Where(x => x.Cost < request.MaxPrice.Value);
+            sortedProducts = sortedProducts.Where(x => x.Cost < request.MaxPrice.Value);
         if (request.OrderBy is not null)
         {
             if (request.OrderBy == "asc")
-                products = products.OrderBy(x => x.Cost);
+                sortedProducts = sortedProducts.OrderBy(x => x.Cost);
             if (request.OrderBy == "desc")
-                products = products.OrderByDescending(x => x.Cost);
+                sortedProducts = sortedProducts.OrderByDescending(x => x.Cost);
         }
-        return products.ToList();
+        return sortedProducts.ToList();
     }
 }
