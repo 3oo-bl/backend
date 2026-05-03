@@ -15,7 +15,7 @@ public class UpdatePrefsService
         _logger = logger;
     }
 
-    public IResult UpdatePrefs(int userId, PrefsWeigthsDTO newPreferences)
+    public IResult UpdatePrefs(int userId, PrefsWeightsDTO newPreferences)
     {
         var user = _dbContext.Users.FirstOrDefault(x => x.Id == userId);
         if (user == default)

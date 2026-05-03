@@ -28,7 +28,12 @@ public class InMemoryPollingService : IPollingService
         return true;
     }
 
-    public ParsingJobStates? CheckJobStatus(string token)
+    public JobResult? GetJob(string token)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ParsingJobStates? CheckJobStatusByPersonalToken(string token)
     {
         if (!_jobs.ContainsKey(token))
         {
@@ -61,7 +66,22 @@ public class InMemoryPollingService : IPollingService
         }
     }
 
-    public List<ProductDTO>? GetProductList(string token, RequestResultsDTO request)
+    public void AddRequest(string requestToken, List<string> jobTokens)
+    {
+        throw new NotImplementedException();
+    }
+
+    public OrderProductsInfoItem? GetRequest(string token)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ParsingJobStates? GetRequestState(string requestToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public List<ProductDTO>? GetOrderedProductList(string token, string? id, RequestResultsItem request)
     {
         var jobResult = _jobs[token];
         if (jobResult.State is ParsingJobStates.Failed)

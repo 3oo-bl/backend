@@ -60,6 +60,7 @@ class OzonLinksParser:
                 return True
 
             except Exception as e:
+                logger.warning(f"Содержимое страницы при блокировке: {self.driver.page_source}")
                 logger.error(f"Ошибка загрузки страницы на попытке {attempt + 1}: {e}")
 
         logger.error("Превышено количество попыток загрузки страницы")

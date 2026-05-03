@@ -4,11 +4,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace ProfitableViewApp.DTOS;
 
 [Table("PrefsWeights")]
-public class PrefsWeigthsDTO
+public class PrefsWeightsDTO
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; init; }
     public float Price { get; set; }
     public float Delivery { get; set; }
-    public float SellerRating { get; set; }
+    public float Rating { get; set; }
 }

@@ -11,12 +11,18 @@ public class RedisPollingService : IPollingService
 {
     private readonly IDatabase _db;
     private readonly ILogger<RedisPollingService> _logger;
+    private readonly ProductSortingService _productSortingService;
 
-    public RedisPollingService(ILogger<RedisPollingService> logger, IConnectionMultiplexer redis)
+    public RedisPollingService(ILogger<RedisPollingService> logger, IConnectionMultiplexer redis,
+        ProductSortingService productSortingService)
     {
         _logger = logger;
         _db = redis.GetDatabase();
+        _productSortingService = productSortingService;
     }
+
+    private string JobKey(string token) => $"job:{token}";
+    private string RequestKey(string token) => $"request:{token}";
     
     public bool AddJob(string token)
     {
@@ -28,29 +34,24 @@ public class RedisPollingService : IPollingService
         var json = JsonSerializer.Serialize(job);
 
         return _db.StringSet(
-            token,
+            JobKey(token),
             json,
             TimeSpan.FromMinutes(30),
             When.NotExists
         );
     }
 
-    public ParsingJobStates? CheckJobStatus(string token)
+    public JobResult? GetJob(string token)
     {
-        if (!_db.KeyExists(token))
-        {
-            _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её проверить!");
-            return null;
-        }
+        var value = _db.StringGet(JobKey(token));
+        if (value.IsNull) return null;
 
-        var state = JsonSerializer.Deserialize<JobResult>(_db.StringGet(token)!)!.State;
-        _logger.LogInformation(state.ToString());
-        return state;
+        return JsonSerializer.Deserialize<JobResult>(value!);
     }
 
     public void FinishJob(string token, List<ProductDTO> results)
     {
-        if (!_db.KeyExists(token))
+        if (!_db.KeyExists(JobKey(token)))
             _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её обновить!");
         else
         {
@@ -61,13 +62,13 @@ public class RedisPollingService : IPollingService
                 State = ParsingJobStates.Completed,
                 Products = results
             };
-            _db.StringSet(token, JsonSerializer.Serialize(result), TimeSpan.FromMinutes(30));
+            _db.StringSet(JobKey(token), JsonSerializer.Serialize(result), TimeSpan.FromMinutes(30));
         }
     }
 
     public void FailJob(string token, Exception ex)
     {
-        if (!_db.KeyExists(token))
+        if (!_db.KeyExists(JobKey(token)))
             _logger.LogWarning($"Джоба с айди {token} не найдена, но вы пытаетесь её обновить!");
         else
         {
@@ -78,28 +79,87 @@ public class RedisPollingService : IPollingService
                 State = ParsingJobStates.Failed,
                 Exception = ex
             };
-            _db.StringSet(token, JsonSerializer.Serialize(result), TimeSpan.FromMinutes(1));
+            _db.StringSet(JobKey(token), JsonSerializer.Serialize(result), TimeSpan.FromMinutes(1));
         }
     }
 
-    public List<ProductDTO>? GetProductList(string token, RequestResultsDTO request)
+    public void AddRequest(string requestToken, List<string> jobTokens)
     {
-        var jobResult = JsonSerializer.Deserialize<JobResult>(_db.StringGet(token)!)!;
-        if (jobResult.State is ParsingJobStates.Failed)
-            return null; // #TODO Exception не дремлет, он лежит в jobResult :(
-        var products = jobResult.Products!.Skip(request.Skip)
+        var tokens = new OrderProductsInfoItem(jobTokens);
+
+        _db.StringSet(
+            RequestKey(requestToken),
+            JsonSerializer.Serialize(tokens),
+            TimeSpan.FromMinutes(30));
+    }
+
+    public OrderProductsInfoItem? GetRequest(string token)
+    {
+        var value = _db.StringGet(RequestKey(token));
+        if (value.IsNull)
+        {
+            _logger.LogWarning($"Запрос с айди {token} не найден, но вы пытаетесь его проверить!");
+            return null;
+        }
+
+        return JsonSerializer.Deserialize<OrderProductsInfoItem>(value!);
+    }
+
+    public ParsingJobStates? GetRequestState(string requestToken)
+    {
+        var request = GetRequest(requestToken);
+        if (request is null)
+            return null;
+        
+        var states = new List<ParsingJobStates>();
+        foreach (var jobToken in request.Tokens)
+        {
+            var job = GetJob(jobToken);
+            if (job is null)
+                continue;
+            states.Add(job.State);
+        }
+        if (states.Count == 0)
+            return null;
+        
+        if (states.Any(x => x is ParsingJobStates.Failed))
+            return ParsingJobStates.Failed;
+        if (states.Any(x => x is ParsingJobStates.Pending))
+            return ParsingJobStates.Pending;
+        
+        return ParsingJobStates.Completed;
+    }
+
+    public List<ProductDTO>? GetOrderedProductList(string token, string? id, RequestResultsItem request)
+    {
+        var requestResult = GetRequest(token);
+        if (requestResult is null)
+            return null;
+        var products = new List<ProductDTO>();
+        foreach (var jobToken in requestResult.Tokens)
+        {
+            var job = GetJob(jobToken);
+            if (job is null || job.State is ParsingJobStates.Failed)
+                return null; // #TODO Exception не дремлет, он лежит в jobResult :(
+            products.AddRange(job.Products!);
+        }
+        var sortedProducts = _productSortingService
+            .SortProductsByUserPreferences(products, id)
+            ?.Skip(request.Skip)
             .Take(request.Take);
+        if (sortedProducts is null)
+            return null;
         if (request.MinPrice is not null)
-            products = products.Where(x => x.Cost > request.MinPrice.Value);
+            sortedProducts = sortedProducts.Where(x => x.Cost > request.MinPrice.Value);
         if (request.MaxPrice is not null)
-            products = products.Where(x => x.Cost < request.MaxPrice.Value);
+            sortedProducts = sortedProducts.Where(x => x.Cost < request.MaxPrice.Value);
         if (request.OrderBy is not null)
         {
             if (request.OrderBy == "asc")
-                products = products.OrderBy(x => x.Cost);
+                sortedProducts = sortedProducts.OrderBy(x => x.Cost);
             if (request.OrderBy == "desc")
-                products = products.OrderByDescending(x => x.Cost);
+                sortedProducts = sortedProducts.OrderByDescending(x => x.Cost);
         }
-        return products.ToList();
+        return sortedProducts.ToList();
     }
 }

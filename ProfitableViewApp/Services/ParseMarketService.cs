@@ -31,33 +31,34 @@ public class ParseMarketService
         _pollingService = pollingService;
     }
 
-    public string? ParseProductList(RequestStartDTO request)
+    public string ParseProductList(RequestStartItem request)
     {
-        var token = GetHash(request.Item);
-        if (!_pollingService.AddJob(token))
-            return token;
-        var tasks = new List<Task<List<ProductDTO>>>();
-        if (request.Markets is null)
+        var markets = request.Markets.Length > 0
+            ? request.Markets
+            : _parsers.Keys.ToArray();
+        
+        var requestToken = Guid.NewGuid().ToString();
+        var jobTokens = new List<string>();
+        var tasks = new Dictionary<string, Task<List<ProductDTO>>>();
+        foreach (var market in markets)
         {
-            _logger.LogInformation("Магазинов в запросе не было, парсим всё.");
-            foreach (var parser in _parsers.Values)
-                tasks.Add(parser.ParseProductList(parser.MarketName, request.Quantity));
-        }
-        foreach (var market in request.Markets)
-        {
+            var token = GetHash(request.Item + market);
+            jobTokens.Add(token);
+            if (!_pollingService.AddJob(token))
+            {
+                continue;
+            }
             if (_parsers.TryGetValue(market, out IMarketplaceParser parser))
-                tasks.Add(parser.ParseProductList(request.Item, request.Quantity));
+                tasks[token] = parser.ParseProductList(request.Item, request.Quantity);
             else
                 _logger.LogWarning($"Парсера для магазина {market} не существует");
         }
+        _pollingService.AddRequest(requestToken, jobTokens);
 
-        if (tasks.Count == 0)
-        {
-            _logger.LogWarning("Нет подходящих под запрос парсеров или список магазинов пуст.");
-            return null;
-        }
-        _ = Task.Run(() => RunJobAsync(token, tasks));
-        return token;
+        if (tasks.Count > 0)
+            _ = Task.Run(() => RunJobAsync(tasks));
+        
+        return requestToken;
     }
 
     private string GetHash(string input)
@@ -67,17 +68,20 @@ public class ParseMarketService
         return hash.ToString();
     }
 
-    private async Task RunJobAsync(string token, List<Task<List<ProductDTO>>> tasks)
+    private async Task RunJobAsync(Dictionary<string, Task<List<ProductDTO>>> tasks)
     {
-        try
+        _logger.LogInformation("Парсинг запущен");
+        await Task.WhenAll(tasks.Select(x => x.Value));
+        foreach (var task in tasks)
         {
-            _logger.LogInformation("Парсинг запущен");
-            var result = await Task.WhenAll(tasks);
-            _pollingService.FinishJob(token, result.SelectMany(x => x).ToList());
-        }
-        catch (Exception ex)
-        {
-            _pollingService.FailJob(token, ex);
+            try
+            {
+                _pollingService.FinishJob(task.Key, task.Value.Result);
+            }
+            catch (Exception ex)
+            {
+                _pollingService.FailJob(task.Key, ex);
+            }
         }
     }
 }

@@ -19,14 +19,14 @@ public static class EndpointsExtensions
             0, new()
             {
                 Name = "Антон", Email = "1", Password = "1",
-                Preferences = new() { Price = 0.5f, Delivery = 0.1f, SellerRating = 0.4f }
+                Preferences = new() { Price = 0.5f, Delivery = 0.1f, Rating = 0.4f }
             }
         },
         {
             1, new()
             {
                 Name = "Геннадий", Email = "oleg@pochta.com", Password = "11111",
-                Preferences = new() { Price = 0.5f, Delivery = 0.1f, SellerRating = 0.4f }
+                Preferences = new() { Price = 0.5f, Delivery = 0.1f, Rating = 0.4f }
             }
         },
     };
@@ -55,19 +55,19 @@ public static class EndpointsExtensions
     public static void MapFakeEndpoints(this WebApplication app, ILogger logger)
     {
         app.MapPatch("/users",
-            [Authorize] (HttpContext context, PrefsWeigthsDTO newPreferences) =>
+            [Authorize] (HttpContext context, PrefsWeightsDTO newPreferences) =>
         {
             var userId = context.User.FindFirst(ClaimTypes.PrimarySid).Value;
             return UpdatePreferencies(userId, newPreferences, logger);
         }).WithOpenApi();
-        app.MapPost("/goods/search", [Authorize] ([FromBody] RequestStartDTO requestStartDto) =>
+        app.MapPost("/goods/search", [Authorize] ([FromBody] RequestStartItem requestStartItem) =>
         {
-            return StartParsing(requestStartDto);
+            return StartParsing(requestStartItem);
         }).WithOpenApi();
         app.MapGet("/goods/search/{jobId}", [Authorize] (string jobId,
-            [AsParameters] RequestResultsDTO requestResultsDto) =>
+            [AsParameters] RequestResultsItem requestResultsItem) =>
         {
-            var result = GetProducts(jobId, requestResultsDto);
+            var result = GetProducts(jobId, requestResultsItem);
             if (result is null)
                 return Results.NotFound();
             return Results.Ok(result);
@@ -89,7 +89,7 @@ public static class EndpointsExtensions
         }).WithOpenApi();
     }
 
-    private static HttpStatusCode UpdatePreferencies(string login, PrefsWeigthsDTO newPreferences, ILogger logger)
+    private static HttpStatusCode UpdatePreferencies(string login, PrefsWeightsDTO newPreferences, ILogger logger)
     {
         var user = _fakeDB.FirstOrDefault(x => x.Value.Id.ToString() == login).Value;
         user.Preferences = newPreferences;
@@ -97,16 +97,16 @@ public static class EndpointsExtensions
         return HttpStatusCode.NoContent;
     }
 
-    private static List<ProductDTO>? GetProducts(string jobId, RequestResultsDTO requestResultsDto)
+    private static List<ProductDTO>? GetProducts(string jobId, RequestResultsItem requestResultsItem)
     {
         if (!_fakeFoundedGoods.ContainsKey(jobId))
             return null;
-        return _fakeFoundedGoods[jobId].Skip(requestResultsDto.Skip).Take(requestResultsDto.Take).ToList();
+        return _fakeFoundedGoods[jobId].Skip(requestResultsItem.Skip).Take(requestResultsItem.Take).ToList();
     }
 
-    private static string StartParsing(RequestStartDTO requestStartDto)
+    private static string StartParsing(RequestStartItem requestStartItem)
     {
-        var found = _fakeGoods.Where(x => x.Name == requestStartDto.Item).ToList();
+        var found = _fakeGoods.Where(x => x.Name == requestStartItem.Item).ToList();
         _fakeFoundedGoods = new Dictionary<string, List<ProductDTO>> {{ "token", found}};
         return "token";
     }

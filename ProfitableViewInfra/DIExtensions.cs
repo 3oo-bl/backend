@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using ProfitableViewApp.Interfaces;
 using ProfitableViewDataInfra.Parsers;
-using ProfitableViewDataInfra.Utils;
 using ProfitableViewInfra.Services;
 
 namespace ProfitableViewInfra;
@@ -14,14 +13,10 @@ public static class DIExtensions
         services.AddScoped<IMarketplaceParser, OzonMarketplaceParser>();
     }
 
-    public static void BindClientFactory(this IServiceCollection services)
-    {
-        services.AddScoped<HttpClientFactory>();
-    }
-
     public static void BindInfrastructureServices(this IServiceCollection services)
     {
         services.AddScoped<AuthentificationService>();
         services.AddScoped<UpdatePrefsService>();
+        services.AddScoped<ProductSortingService>();
     }
 }

@@ -18,23 +18,24 @@ public static class Endpoints
         app.MapPost("/auth/login", (string email, string password, AuthentificationService authService)
             => authService.Login(email, password)).WithOpenApi();
         app.MapPatch("/users", [Authorize] (HttpContext context, UpdatePrefsService updatePrefsService,
-            PrefsWeigthsDTO newPreferences) =>
+            PrefsWeightsDTO newPreferences) =>
         {
             var id = context.User.FindFirst(ClaimTypes.PrimarySid)?.Value;
             return updatePrefsService.UpdatePrefs(int.Parse(id!), newPreferences);
         }).WithOpenApi();
         app.MapPost("/goods/search",
-            [Authorize]([FromBody] RequestStartDTO requestStartDto, ParseMarketService parseMarketService) =>
-            parseMarketService.ParseProductList(requestStartDto));
-        app.MapGet("/goods/search/{jobId}", [Authorize] (string jobId,
-            [AsParameters] RequestResultsDTO requestResultsDto, IPollingService pollingService) =>
+            [Authorize]([FromBody] RequestStartItem requestStartItem, ParseMarketService parseMarketService) =>
+            parseMarketService.ParseProductList(requestStartItem));
+        app.MapGet("/goods/search/{jobId}", [Authorize] (HttpContext context, string personalToken,
+            [AsParameters] RequestResultsItem requestResultsItem, IPollingService pollingService) =>
         {
-            var status = pollingService.CheckJobStatus(jobId);
+            var status = pollingService.GetRequestState(personalToken);
             if (status is null)
                 return Results.BadRequest();
             if (status is ParsingJobStates.Pending)
                 return Results.Accepted();
-            var result = pollingService.GetProductList(jobId, requestResultsDto);
+            var id = context.User.FindFirst(ClaimTypes.PrimarySid)?.Value;
+            var result = pollingService.GetOrderedProductList(personalToken, id, requestResultsItem);
             if (result is not null)
                 return Results.Ok(result);
             return Results.Problem();

@@ -106,7 +106,6 @@ class OzonParserService(searchers_pb2_grpc.OzonParserServicer):
     def collect_product_info(self, json_content):
         try:
             data = json.loads(json_content)
-            logger.warning("JSON в обработке")
             return data.get("widgetStates", {})
         except Exception as e:
             logger.error(f"parse error: {e}")
