@@ -5,7 +5,6 @@ namespace ProfitableViewApp.Interfaces;
 
 public interface IMarketplaceParser
 {
-    public HttpClient Client { get; }
     public string MarketName { get; }
     public Task<List<ProductDTO>> ParseProductList(string itemName, int? quantity = 100);
 }

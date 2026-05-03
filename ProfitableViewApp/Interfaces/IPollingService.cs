@@ -6,8 +6,11 @@ namespace ProfitableViewApp.Interfaces;
 public interface IPollingService
 {
     public bool AddJob(string token);
-    public ParsingJobStates? CheckJobStatus(string token);
+    public JobResult? GetJob(string token);
     public void FinishJob(string token, List<ProductDTO> result);
     public void FailJob(string token, Exception ex);
-    public List<ProductDTO>? GetOrderedProductList(string token, string? id, RequestResultsDTO request);
+    public void AddRequest(string requestToken, List<string> jobTokens);
+    public OrderProductsInfoItem? GetRequest(string token);
+    public ParsingJobStates? GetRequestState(string requestToken);
+    public List<ProductDTO>? GetOrderedProductList(string token, string? id, RequestResultsItem request);
 }
