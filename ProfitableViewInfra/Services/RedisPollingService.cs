@@ -150,15 +150,29 @@ public class RedisPollingService : IPollingService
         if (sortedProducts is null)
             return null;
         if (request.MinPrice is not null)
-            sortedProducts = sortedProducts.Where(x => x.Cost > request.MinPrice.Value);
+            sortedProducts = sortedProducts.Where(x => x.Cost >= request.MinPrice);
         if (request.MaxPrice is not null)
-            sortedProducts = sortedProducts.Where(x => x.Cost < request.MaxPrice.Value);
-        if (request.OrderBy is not null)
+            sortedProducts = sortedProducts.Where(x => x.Cost <= request.MaxPrice);
+        if (request.MinReviews is not null)
+            sortedProducts = sortedProducts.Where(x => x.Reviews >= request.MinReviews);
+        if (request.MinRating is not null)
+            sortedProducts = sortedProducts.Where(x => x.Rating >= request.MinRating);
+        if (request.SortBy is not null)
         {
-            if (request.OrderBy == "asc")
-                sortedProducts = sortedProducts.OrderBy(x => x.Cost);
-            if (request.OrderBy == "desc")
-                sortedProducts = sortedProducts.OrderByDescending(x => x.Cost);
+            if (request.SortBy == "price")
+            {
+                if (request.OrderBy is not null)
+                {
+                    if (request.OrderBy == "asc")
+                        sortedProducts = sortedProducts.OrderBy(x => x.Cost);
+                    if (request.OrderBy == "desc")
+                        sortedProducts = sortedProducts.OrderByDescending(x => x.Cost);
+                }
+            }
+            if (request.SortBy == "rating")
+                sortedProducts = sortedProducts.OrderByDescending(x => x.Rating);
+            if (request.SortBy == "reviews")
+                sortedProducts = sortedProducts.OrderByDescending(x => x.Reviews);
         }
         return sortedProducts.ToList();
     }

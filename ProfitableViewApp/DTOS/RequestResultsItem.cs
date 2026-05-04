@@ -6,6 +6,8 @@ public class RequestResultsItem
     public int Take { get; set; }
     public int? MinPrice { get; set; }
     public int? MaxPrice { get; set; }
+    public int? MinReviews { get; set; }
+    public float? MinRating { get; set; }
     public string? SortBy { get; set; }
     public string? OrderBy { get; set; }
 }

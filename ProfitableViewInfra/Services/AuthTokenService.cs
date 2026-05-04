@@ -23,7 +23,7 @@ public class AuthTokenService
             issuer: "",
             audience: "ProfitableViewAPI",
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(30),
+            expires: DateTime.UtcNow.AddDays(7),
             signingCredentials: new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["jwt:Key"]!)),
                 SecurityAlgorithms.HmacSha256));
