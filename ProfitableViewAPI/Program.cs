@@ -100,6 +100,8 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(
 builder.Services.BindParsers();
 builder.Services.BindInfrastructureServices();
 
+builder.Services.AddCors();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -108,6 +110,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
 }
+
+app.UseCors(x => x
+    .AllowAnyOrigin()
+    .AllowAnyMethod()
+    .AllowAnyHeader());
+
 
 using (var scope = app.Services.CreateScope())
 {
