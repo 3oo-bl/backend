@@ -109,6 +109,12 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<DBContext>();
+    db.Database.Migrate();
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseHttpsRedirection();
