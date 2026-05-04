@@ -15,8 +15,8 @@ public static class Endpoints
     {
         app.MapPost("/auth/register", (UserDTO newUser, AuthentificationService authService)
             => authService.Register(newUser)).WithOpenApi();
-        app.MapPost("/auth/login", (string email, string password, AuthentificationService authService)
-            => authService.Login(email, password)).WithOpenApi();
+        app.MapPost("/auth/login", (AuthItem authItem, AuthentificationService authService)
+            => authService.Login(authItem.Email, authItem.Password)).WithOpenApi();
         app.MapPatch("/users", [Authorize] (HttpContext context, UpdatePrefsService updatePrefsService,
             PrefsWeightsDTO newPreferences) =>
         {
@@ -26,7 +26,7 @@ public static class Endpoints
         app.MapPost("/goods/search",
             [Authorize]([FromBody] RequestStartItem requestStartItem, ParseMarketService parseMarketService) =>
             parseMarketService.ParseProductList(requestStartItem));
-        app.MapGet("/goods/search/{jobId}", [Authorize] (HttpContext context, string personalToken,
+        app.MapGet("/goods/search/{personalToken}", [Authorize] (HttpContext context, string personalToken,
             [AsParameters] RequestResultsItem requestResultsItem, IPollingService pollingService) =>
         {
             var status = pollingService.GetRequestState(personalToken);
