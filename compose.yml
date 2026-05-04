@@ -18,9 +18,9 @@ services:
     image: postgres:latest
     restart: always
     environment:
-      POSTGRES_USER: /run/secrets/pg_user
-      POSTGRES_PASSWORD: /run/secrets/pg_password
-      POSTGRES_DB: app
+      POSTGRES_USER_FILE: /run/secrets/pg_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/pg_password
+      POSTGRES_DB: ProfitableViewDB
     secrets:
       - pg_user
       - pg_password

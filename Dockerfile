@@ -4,7 +4,6 @@ WORKDIR /src
 COPY *.sln ./
 COPY ProfitableViewAPI/*.csproj ./ProfitableViewAPI/
 COPY ProfitableViewApp/*.csproj ./ProfitableViewApp/
-COPY ProfitableViewData/*.csproj ./ProfitableViewData/
 COPY ProfitableViewInfra/*.csproj ./ProfitableViewInfra/
 COPY proto/*.proto ./proto/
 
@@ -12,7 +11,6 @@ RUN dotnet restore ProfitableViewAPI/ProfitableViewAPI.csproj
 
 COPY ProfitableViewAPI/. ./ProfitableViewAPI/
 COPY ProfitableViewApp/. ./ProfitableViewApp/
-COPY ProfitableViewData/. ./ProfitableViewData/
 COPY ProfitableViewInfra/. ./ProfitableViewInfra/
 COPY proto/. ./proto/
 WORKDIR /src/ProfitableViewAPI
