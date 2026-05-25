@@ -27,7 +27,7 @@ class WBParserService(searchers_pb2_grpc.WbParserServicer):
             "Connection": "keep-alive",
         }
 
-        self.base_url = "https://search.wb.ru/exactmatch/ru/common/v18/search"
+        self.base_url = "https://u-search.wb.ru/exactmatch/ru/common/v18/search"
 
     def _sleep(self, attempt):
         base = min(20, 1.2 * (2 ** attempt))
